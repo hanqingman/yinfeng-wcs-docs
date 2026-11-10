@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>音锋仓入库业务方案</title>
+  <style>
+    :root {
+      --blue-950: #09264f;
+      --blue-900: #0b3268;
+      --blue-800: #0b4a9e;
+      --blue-700: #0969da;
+      --blue-600: #1677ff;
+      --blue-100: #dcebff;
+      --blue-50: #f1f7ff;
+      --cyan-500: #0ea5a8;
+      --green-700: #16803a;
+      --green-100: #dff6e6;
+      --orange-700: #b54708;
+      --orange-100: #ffefd6;
+      --red-700: #b42318;
+      --red-100: #ffe7e5;
+      --purple-700: #6941c6;
+      --purple-100: #eee8ff;
+      --ink: #152238;
+      --muted: #5e6b7f;
+      --line: #d8e1ee;
+      --line-strong: #b8c7db;
+      --panel: #ffffff;
+      --canvas: #f4f7fb;
+      --shadow: 0 12px 32px rgba(9, 38, 79, .09);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font: 14px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    a { color: inherit; }
+    button, input { font: inherit; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 54px;
+      padding: 8px 24px;
+      color: #fff;
+      background: rgba(9, 38, 79, .96);
+      box-shadow: 0 4px 18px rgba(9, 38, 79, .18);
+      backdrop-filter: blur(10px);
+    }
+    .brand { display: flex; gap: 10px; align-items: center; font-weight: 750; letter-spacing: .02em; }
+    .brand-mark {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.38);
+      border-radius: 8px;
+      background: rgba(255,255,255,.1);
+    }
+    .top-actions { display: flex; gap: 8px; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 6px 12px;
+      color: var(--ink);
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .button:hover { border-color: var(--blue-600); color: var(--blue-800); }
+    .button.ghost { color: #fff; border-color: rgba(255,255,255,.35); background: transparent; }
+    .button.ghost:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,.1); }
+
+    .hero {
+      color: #fff;
+      background:
+        radial-gradient(circle at 78% 18%, rgba(39, 181, 210, .36), transparent 26%),
+        radial-gradient(circle at 18% 110%, rgba(22, 119, 255, .46), transparent 32%),
+        linear-gradient(132deg, var(--blue-950), var(--blue-800));
+    }
+    .hero-inner { max-width: 1480px; margin: 0 auto; padding: 34px 32px 38px; }
+    h1 { max-width: 980px; margin: 0; font-size: clamp(30px, 3.5vw, 46px); line-height: 1.15; letter-spacing: -.025em; }
+
+    .shell { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 24px; max-width: 1480px; margin: 0 auto; padding: 28px 32px 70px; }
+    .side-nav { position: sticky; top: 78px; align-self: start; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.9); box-shadow: 0 8px 24px rgba(9,38,79,.06); }
+    .side-nav .nav-title { padding: 8px 10px 10px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .1em; }
+    .side-nav a { display: block; padding: 9px 11px; color: #40516a; border-left: 3px solid transparent; border-radius: 8px; text-decoration: none; }
+    .side-nav a:hover { color: var(--blue-800); background: var(--blue-50); }
+    .side-nav a.active { color: var(--blue-800); border-left-color: var(--blue-600); background: var(--blue-50); font-weight: 750; }
+    main { min-width: 0; }
+    section { scroll-margin-top: 72px; margin-bottom: 24px; }
+    .section-card { padding: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); }
+    .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+    .section-index { display: inline-flex; margin-bottom: 7px; color: var(--blue-700); font-size: 12px; font-weight: 850; letter-spacing: .12em; }
+    h2 { margin: 0; color: var(--blue-950); font-size: 25px; line-height: 1.25; }
+    h3 { margin: 0 0 10px; color: var(--blue-900); font-size: 18px; line-height: 1.35; }
+    h4 { margin: 0 0 7px; color: var(--ink); font-size: 15px; }
+    p { margin: 0 0 10px; }
+    .lead { max-width: 930px; margin-top: 7px; color: var(--muted); }
+
+    .callout { margin: 14px 0; padding: 14px 16px; border-left: 4px solid var(--blue-600); border-radius: 10px; background: var(--blue-50); }
+    .callout strong { color: var(--blue-900); }
+    .callout.warn { border-left-color: #f79009; background: #fff7e8; }
+    .callout.warn strong { color: var(--orange-700); }
+    .callout.danger { border-left-color: #e5484d; background: #fff1f0; }
+    .callout.success { border-left-color: #25a05a; background: #eefbf2; }
+
+    .badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 750; }
+    .badge.blue { color: var(--blue-800); background: var(--blue-100); }
+    .badge.green { color: var(--green-700); background: var(--green-100); }
+    .badge.orange { color: var(--orange-700); background: var(--orange-100); }
+    .badge.red { color: var(--red-700); background: var(--red-100); }
+    .badge.purple { color: var(--purple-700); background: var(--purple-100); }
+    .badge.gray { color: #526176; background: #edf1f6; }
+    .actor { display: inline-flex; align-items: center; padding: 2px 7px; color: #fff; border-radius: 6px; font-size: 11px; font-weight: 750; }
+    .actor.fwms { background: #7048c7; }
+    .actor.wcs { background: #0969da; }
+    .actor.rcs { background: #0c8f77; }
+    .actor.user { background: #b25c00; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+    .mini-card { padding: 17px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+    .mini-card.soft { background: #f8fbff; }
+    .mini-card p:last-child, .callout p:last-child { margin-bottom: 0; }
+    .key-list { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
+    .key-list li { position: relative; padding-left: 18px; }
+    .key-list li::before { position: absolute; left: 1px; top: .7em; width: 7px; height: 7px; border-radius: 50%; background: var(--blue-600); content: ""; }
+
+    .table-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+    .search { min-width: min(340px, 100%); padding: 8px 11px; color: var(--ink); border: 1px solid var(--line-strong); border-radius: 9px; background: #fff; outline: none; }
+    .search:focus { border-color: var(--blue-600); box-shadow: 0 0 0 3px rgba(22,119,255,.12); }
+    .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filter-button { padding: 6px 10px; color: #4a5a71; border: 1px solid var(--line); border-radius: 999px; background: #fff; cursor: pointer; }
+    .filter-button.active { color: #fff; border-color: var(--blue-700); background: var(--blue-700); }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 11px; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    th, td { padding: 10px 11px; text-align: left; vertical-align: top; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    th:last-child, td:last-child { border-right: 0; }
+    tbody tr:last-child td { border-bottom: 0; }
+    thead th { position: sticky; top: 0; z-index: 2; color: #fff; background: #0866d9; font-size: 12px; font-weight: 800; }
+    tbody tr:nth-child(even) { background: #f8fbff; }
+    tbody tr:hover { background: #eef6ff; }
+    .requirements-wrap { overflow: hidden; }
+    .requirements-table { width: 100%; min-width: 0; table-layout: fixed; }
+    .requirements-table th:nth-child(1), .requirements-table td:nth-child(1) { width: 88px; }
+    .requirements-table th:nth-child(2), .requirements-table td:nth-child(2) { width: 180px; }
+    .requirements-table th:nth-child(3), .requirements-table td:nth-child(3) { width: auto; }
+    .requirements-table th, .requirements-table td { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+    .requirements-table .desc-line { margin: 0 0 5px; }
+    .requirements-table .desc-line:last-child { margin-bottom: 0; }
+    .compact-table { min-width: 760px; }
+    .rcs-table { min-width: 0; table-layout: fixed; }
+    .rcs-table th, .rcs-table td { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+    .compact-table thead th { color: var(--blue-950); background: #eaf3ff; }
+    .compact-table td, .compact-table th { padding: 10px 12px; }
+    .led-table { min-width: 0; table-layout: fixed; }
+    .led-table th, .led-table td { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+    .led-sample { width: min(100%, 560px); margin: 12px 0 16px; }
+    .led-sample a { display: block; }
+    .led-sample img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; }
+    .led-sample figcaption { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .check { color: var(--green-700); font-weight: 800; }
+    .dash { color: #9aa7b7; }
+
+    .steps { display: grid; grid-template-columns: repeat(5, minmax(140px, 1fr)); gap: 10px; padding: 0; margin: 0; counter-reset: flow; list-style: none; }
+    .steps li { position: relative; min-height: 136px; padding: 38px 12px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; counter-increment: flow; }
+    .steps li::before { position: absolute; top: 11px; left: 12px; display: grid; width: 22px; height: 22px; place-items: center; color: #fff; border-radius: 50%; background: var(--blue-700); font-size: 11px; font-weight: 800; content: counter(flow); }
+    .steps li::after { position: absolute; top: 22px; right: -11px; z-index: 2; color: var(--blue-600); content: "→"; }
+    .steps li:nth-child(5n)::after, .steps li:last-child::after { display: none; }
+    .steps strong { display: block; margin-bottom: 5px; color: var(--blue-900); }
+    .steps p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+
+    .swimlane-figure { margin: 0 0 22px; }
+    .swimlane-figure figcaption { margin: 0 0 10px; color: var(--blue-950); font-size: 17px; font-weight: 800; }
+    .swimlane-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .swimlane-svg { display: block; width: 100%; min-width: 1080px; height: auto; }
+    .swimlane-svg text { fill: #24344d; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .swimlane-svg .lane-title { fill: #fff; font-size: 16px; font-weight: 800; text-anchor: middle; }
+    .swimlane-svg .node { fill: #fff; stroke: #7890ad; stroke-width: 1.6; }
+    .swimlane-svg .node.fwms { fill: #f7f2ff; stroke: #8a68cf; }
+    .swimlane-svg .node.wcs { fill: #eef6ff; stroke: #4387d4; }
+    .swimlane-svg .node.rcs { fill: #ecfbf7; stroke: #35a58a; }
+    .swimlane-svg .node.user { fill: #fff7e8; stroke: #db9838; }
+    .swimlane-svg .node.error { fill: #fff0ef; stroke: #d25a51; }
+    .swimlane-svg .node.success { fill: #eefbf2; stroke: #39a65f; }
+    .swimlane-svg .decision { fill: #fffaf0; stroke: #d79a38; stroke-width: 1.7; }
+    .swimlane-svg .node-text { font-size: 13px; font-weight: 700; text-anchor: middle; }
+    .swimlane-svg .node-sub { fill: #61718a; font-size: 11px; font-weight: 500; text-anchor: middle; }
+    .swimlane-svg .connector { fill: none; stroke: #73849b; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#flow-arrow); }
+    .swimlane-svg .connector.dashed { stroke-dasharray: 6 5; }
+    .swimlane-svg .branch-label { fill: #52647c; font-size: 11px; font-weight: 800; }
+    .flow-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+
+    details.scenario { margin-bottom: 12px; overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+    details.scenario[open] { border-color: #b7d0ef; box-shadow: 0 7px 20px rgba(9,38,79,.06); }
+    details.scenario summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; cursor: pointer; list-style: none; }
+    details.scenario summary::-webkit-details-marker { display: none; }
+    details.scenario summary::after { color: var(--blue-700); font-size: 18px; font-weight: 800; content: "+"; }
+    details.scenario[open] summary::after { content: "−"; }
+    .scenario-name { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+    .scenario-body { padding: 0 18px 18px; border-top: 1px solid var(--line); }
+    .scenario-body .grid-2 { margin-top: 16px; }
+    code { padding: 1px 5px; color: #173f6f; border-radius: 5px; background: #edf5ff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; }
+
+    .pending-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .pending-item { padding: 15px; border: 1px solid #f0c071; border-radius: 12px; background: #fff9ee; }
+    .pending-item h4 { color: #8b4b00; }
+    .footer { padding: 28px 32px 40px; color: #768399; text-align: center; }
+
+    @media (max-width: 1120px) {
+      .shell { grid-template-columns: 1fr; }
+      .side-nav { position: static; display: flex; gap: 4px; overflow-x: auto; }
+      .side-nav .nav-title { display: none; }
+      .side-nav a { white-space: nowrap; border-left: 0; border-bottom: 3px solid transparent; }
+      .side-nav a.active { border-bottom-color: var(--blue-600); }
+      .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .steps li::after, .steps li:nth-child(5n)::after { display: none; }
+    }
+    @media (max-width: 760px) {
+      .topbar { padding-inline: 14px; }
+      .brand span:last-child { display: none; }
+      .hero-inner, .shell { padding-left: 16px; padding-right: 16px; }
+      .grid-2, .grid-3, .pending-grid { grid-template-columns: 1fr; }
+      .section-card { padding: 18px; border-radius: 13px; }
+      .steps { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      @page { size: A4 landscape; margin: 10mm; }
+      body { background: #fff; font-size: 10px; }
+      .topbar, .side-nav, .table-toolbar { display: none !important; }
+      .hero { color: #111; background: #fff; border-bottom: 2px solid #0b4a9e; }
+      .hero-inner { max-width: none; padding: 0 0 8mm; }
+      .shell { display: block; max-width: none; padding: 8mm 0 0; }
+      .section-card { padding: 0; border: 0; box-shadow: none; }
+      section { break-inside: auto; margin-bottom: 8mm; }
+      h2, h3 { break-after: avoid; }
+      table, .mini-card, details.scenario { break-inside: avoid; }
+      .swimlane-figure { break-inside: avoid; }
+      .swimlane-scroll { overflow: visible; }
+      .swimlane-svg { min-width: 0; }
+      .table-wrap { overflow: visible; border-color: #999; }
+      .requirements-table { min-width: 0; font-size: 8px; }
+      thead th { position: static; color: #fff !important; background: #0b4a9e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .steps { grid-template-columns: repeat(5, 1fr); }
+      details.scenario .scenario-body { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">W</span><span>OPPO WCS · 音锋仓</span></div>
+    <div class="top-actions">
+      <button class="button ghost" id="printPage" type="button">打印 / PDF</button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <h1>音锋仓入库业务方案</h1>
+    </div>
+  </div>
+
+  <div class="shell">
+    <nav class="side-nav" aria-label="章节导航">
+      <div class="nav-title">DOCUMENT MAP</div>
+      <a href="#overview">01 范围与结论</a>
+      <a href="#requirements">02 需求总表</a>
+      <a href="#common-flow">03 入库主流程</a>
+      <a href="#scenarios">04 场景差异</a>
+      <a href="#allocation">05 货道分配规则</a>
+      <a href="#functions">06 接口清单</a>
+      <a href="#exceptions">07 异常处理</a>
+    </nav>
+
+    <main>
+      <section id="overview" class="section-card">
+        <div class="section-head">
+          <div>
+            <span class="section-index">01 · SCOPE</span>
+            <h2>范围与核心结论</h2>
+          </div>
+          <span class="badge orange">待业务评审</span>
+        </div>
+
+        <div class="callout success">
+          <strong>统一主线：</strong>FWMS 建单、组盘和清点；WCS 校验 LPN、生成入库业务数据。RCS 发起第一段请求（LPN、源位置），WCS 返回任务号、LPN、母车轨道编号和货道编号；到达母车轨道接货点后，RCS 发起第二段请求（第一段任务号、LPN、源位置），WCS 返回第一段任务号、LPN、货道编号和深度（1～6）；RCS 到达指定深度后反馈第一段任务号、LPN、货道编号和深度，WCS 返回成功 / 失败并更新库存与任务。返回失败时 RCS 重新发起完成反馈，WCS 幂等处理。
+        </div>
+
+        <div class="callout"><strong>作业前提：</strong>所有入库物料均须组盘到带 LPN 的音锋托盘后进入自动化库。</div>
+
+        <div class="grid-2">
+          <article class="mini-card soft">
+            <h3>业务范围</h3>
+            <ul class="key-list">
+              <li>来料入库、退料入库、质检还料</li>
+              <li>103 / 106 / 109 三个常规入库口；263 为备用入库口</li>
+            </ul>
+          </article>
+          <article class="mini-card soft">
+            <h3>系统边界</h3>
+            <ul class="key-list">
+              <li>FWMS 负责建单、组盘和清点</li>
+              <li>WCS 负责数据校验、货道分配、任务和库存</li>
+              <li>RCS 负责设备路径和搬运执行</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="requirements" class="section-card">
+        <div class="section-head">
+          <div>
+            <span class="section-index">02 · REQUIREMENT REGISTER</span>
+            <h2>入库需求总表</h2>
+          </div>
+          <span class="badge blue">6 项</span>
+        </div>
+
+        <div class="table-toolbar">
+          <input class="search" id="requirementSearch" type="search" placeholder="搜索类型、功能或描述…" aria-label="搜索需求">
+          <div class="filter-group" aria-label="需求类型筛选">
+            <button class="filter-button active" type="button" data-filter="all">全部</button>
+            <button class="filter-button" type="button" data-filter="入库">入库</button>
+            <button class="filter-button" type="button" data-filter="策略">策略</button>
+          </div>
+        </div>
+
+        <div class="table-wrap requirements-wrap">
+          <table class="requirements-table" id="requirementsTable">
+            <colgroup><col style="width:88px"><col style="width:180px"><col></colgroup>
+            <thead>
+              <tr><th>需求类型</th><th>功能</th><th>功能描述</th></tr>
+            </thead>
+            <tbody>
+              <tr data-type="入库"><td><span class="badge blue">入库</span></td><td>来料入库</td><td><p class="desc-line">采购到货物料经 FWMS 建单、组盘和清点后，通过常规口 103 / 106 / 109 或备用口 263 进入音锋自动化库。</p><p class="desc-line">RCS 在入口识别 LPN 后请求入库；WCS 获取完整组盘明细、生成入库业务数据。搬运按两段请求执行：先返回母车轨道和货道，到达母车轨道接货点后再返回深度；RCS 到达指定深度后反馈完成。</p><p class="desc-line">留样托单独组盘，来料入库阶段暂不进入自动化库；质检完成后通过质检还料流程进入自动化库。</p></td></tr>
+              <tr data-type="入库"><td><span class="badge blue">入库</span></td><td>退料入库</td><td>退料经 FWMS 组盘、清点后上架；不留样、不检验包装，其余按主流程执行。</td></tr>
+              <tr data-type="入库"><td><span class="badge blue">入库</span></td><td>质检还料</td><td><p class="desc-line">覆盖原箱还料、部分损耗后还料；全部损耗无实物入库。</p><p class="desc-line">多个入库单的物料可组盘到同一个留样托；WCS 按留样托 LPN 获取全部关联入库单的组盘明细，并保留各明细的单据归属。</p><p class="desc-line">每次处理一个 UPN，按外部单号＋供应商＋SKU 查找对应原入库单数量最小的尾托，校验并完成绑定；无尾托时绑定新托盘。LED 仅显示当前 UPN 还料对应的信息。</p></td></tr>
+              <tr data-type="入库"><td><span class="badge blue">入库</span></td><td>入库数据生成</td><td>收到完整组盘数据后，WCS 生成入库单、入库明细、上架任务和搬运任务，并保留 FWMS 单号、外部单号、供应商、SKU、UPN、LPN、数量和包装信息。同一 LPN 重复请求必须幂等，只保留一套有效业务数据，不得重复占位或下发任务。</td></tr>
+              <tr data-type="策略"><td><span class="badge orange">策略</span></td><td>货道分配</td><td>统一按<a href="../【OPPO】业务方案-音锋仓-回库策略-20261104v1.html">《音锋仓回库策略方案》</a>执行货道匹配、整单规划与逐托绑定。</td></tr>
+              <tr data-type="策略"><td><span class="badge orange">策略</span></td><td>搬运目标与完成</td><td>RCS 发起第一段请求（LPN、源位置），WCS 返回任务号、LPN、母车轨道编号和货道编号；到达母车轨道接货点后，RCS 发起第二段请求（第一段任务号、LPN、源位置），WCS 返回第一段任务号、LPN、货道编号和深度（1～6）；RCS 到达指定深度后反馈第一段任务号、LPN、货道编号和深度，WCS 返回成功 / 失败并更新库存与任务。返回失败时 RCS 重新发起完成反馈，WCS 幂等处理。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+      <section id="common-flow" class="section-card">
+        <div class="section-head">
+          <div>
+            <span class="section-index">03 · END-TO-END FLOW</span>
+            <h2>入库主流程</h2>
+            <p class="lead">来料和退料复用主流程；质检还料增加尾托匹配与绑定。</p>
+          </div>
+          <span class="badge blue">7 个控制点</span>
+        </div>
+
+        <figure class="swimlane-figure" aria-labelledby="inbound-flow-caption">
+          <div class="swimlane-scroll">
+            <svg class="swimlane-svg" viewBox="0 0 1120 1700" role="img" aria-label="FWMS与PDA、WCS中控、RCS和工作台四泳道的来料入库流程图">
+              <defs>
+                <marker id="flow-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0,0 L8,4 L0,8 Z" fill="#73849b"></path>
+                </marker>
+              </defs>
+
+              <rect x="0" y="0" width="280" height="1700" fill="#fbf9ff"></rect>
+              <rect x="280" y="0" width="280" height="1700" fill="#f7fbff"></rect>
+              <rect x="560" y="0" width="280" height="1700" fill="#f7fcfa"></rect>
+              <rect x="840" y="0" width="280" height="1700" fill="#fffcf6"></rect>
+              <rect x="0" y="0" width="280" height="54" fill="#7048c7"></rect>
+              <rect x="280" y="0" width="280" height="54" fill="#0969da"></rect>
+              <rect x="560" y="0" width="280" height="54" fill="#0c8f77"></rect>
+              <rect x="840" y="0" width="280" height="54" fill="#b25c00"></rect>
+              <line x1="280" y1="0" x2="280" y2="1700" stroke="#b9c7d8"></line>
+              <line x1="560" y1="0" x2="560" y2="1700" stroke="#b9c7d8"></line>
+              <line x1="840" y1="0" x2="840" y2="1700" stroke="#b9c7d8"></line>
+              <text class="lane-title" x="140" y="34">FWMS - PDA</text>
+              <text class="lane-title" x="420" y="34">WCS 中控</text>
+              <text class="lane-title" x="700" y="34">RCS - 音锋</text>
+              <text class="lane-title" x="980" y="34">人工作业</text>
+
+              <rect class="node fwms" x="45" y="76" width="190" height="48" rx="10"></rect>
+              <text class="node-text" x="140" y="105">FWMS 创建入库单</text>
+              <rect class="node user" x="900" y="76" width="160" height="48" rx="24"></rect>
+              <text class="node-text" x="980" y="105">开始</text>
+
+              <g transform="translate(0,-230)">
+              <rect class="node user" x="885" y="385" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="980" y="408">人工将物料组盘至</text>
+              <text class="node-text" x="980" y="425">音锋托盘并粘贴 LPN</text>
+              <path class="connector" d="M980 354 V385"></path>
+
+              <rect class="node fwms" x="45" y="468" width="190" height="52" rx="10"></rect>
+              <text class="node-text" x="140" y="491">选择托盘 LPN</text>
+              <text class="node-sub" x="140" y="508">组盘前校验</text>
+              <rect class="node wcs" x="325" y="468" width="190" height="52" rx="10"></rect>
+              <text class="node-text" x="420" y="491">校验 LPN 可用性</text>
+              <text class="node-sub" x="420" y="508">IF-IN-01</text>
+              <path class="connector" d="M885 414 H260 V494 H235"></path>
+              <path class="connector" d="M235 494 H325"></path>
+
+              <polygon class="decision" points="140,550 225,585 140,620 55,585"></polygon>
+              <text class="node-text" x="140" y="581">LPN 是否</text>
+              <text class="node-text" x="140" y="598">可用？</text>
+              <path class="connector" d="M420 520 V535 H140 V550"></path>
+              <path class="connector" d="M55 585 H20 V494 H45"></path>
+              <text class="branch-label" x="25" y="572">否：重新选托</text>
+
+              <rect class="node fwms" x="45" y="650" width="190" height="62" rx="10"></rect>
+              <text class="node-text" x="140" y="674">FWMS 组盘、清点</text>
+              <text class="node-sub" x="140" y="692">留样托单独组盘，暂不入库</text>
+              <path class="connector" d="M140 620 V650"></path>
+              <text class="branch-label" x="151" y="640">是</text>
+
+              <rect class="node fwms" x="45" y="742" width="190" height="54" rx="10"></rect>
+              <text class="node-text" x="140" y="765">整单组盘清点完成</text>
+              <text class="node-sub" x="140" y="783">进入自动化入库</text>
+              <path class="connector" d="M140 712 V742"></path>
+
+              <rect class="node rcs" x="605" y="742" width="190" height="54" rx="10"></rect>
+              <text class="node-text" x="700" y="765">托盘投入入库口</text>
+              <text class="node-sub" x="700" y="783">常规 103/106/109 · 备用 263</text>
+              <path class="connector" d="M235 769 H605"></path>
+
+              <rect class="node rcs" x="605" y="832" width="190" height="54" rx="10"></rect>
+              <text class="node-text" x="700" y="855">入口识别并请求第一段</text>
+              <text class="node-sub" x="700" y="873">LPN、源位置 · RCS-01</text>
+              <path class="connector" d="M700 796 V832"></path>
+
+              <polygon class="decision" points="420,915 515,952 420,989 325,952"></polygon>
+              <text class="node-text" x="420" y="948">是否已有入库单</text>
+              <text class="node-text" x="420" y="965">及明细？</text>
+              <path class="connector" d="M605 859 H555 V895 H420 V915"></path>
+
+              <rect class="node wcs" x="325" y="1020" width="190" height="66" rx="10"></rect>
+              <text class="node-text" x="420" y="1041">按 LPN 查询 FWMS</text>
+              <text class="node-sub" x="420" y="1059">获取所在入库单全部组盘明细</text>
+              <text class="node-sub" x="420" y="1077">IF-IN-02</text>
+              <path class="connector" d="M420 989 V1020"></path>
+              <text class="branch-label" x="432" y="1012">否</text>
+
+              <path class="connector" d="M515 952 H545 V1545 H515"></path>
+              <text class="branch-label" x="526" y="942">是</text>
+
+              <polygon class="decision" points="140,1018 235,1053 140,1088 45,1053"></polygon>
+              <text class="node-text" x="140" y="1049">所有关联单据</text>
+              <text class="node-text" x="140" y="1066">组盘完成？</text>
+              <path class="connector" d="M325 1053 H235"></path>
+
+              <rect class="node error" x="45" y="1125" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="140" y="1148">拦截本次入库</text>
+              <text class="node-sub" x="140" y="1166">LED 显示未组盘完毕，不建任务</text>
+              <path class="connector" d="M140 1088 V1125"></path>
+              <text class="branch-label" x="151" y="1112">否</text>
+
+              <rect class="node fwms" x="45" y="1218" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="140" y="1241">返回整单全部组盘明细</text>
+              <text class="node-sub" x="140" y="1259">包含关联托盘</text>
+              <path class="connector" d="M45 1053 H18 V1247 H45"></path>
+              <text class="branch-label" x="22" y="1042">是</text>
+
+              <rect class="node wcs" x="325" y="1218" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="420" y="1241">生成入库业务数据</text>
+              <text class="node-sub" x="420" y="1259">单据、明细、上架及搬运任务</text>
+              <path class="connector" d="M235 1247 H325"></path>
+
+              <rect class="node wcs" x="325" y="1310" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="420" y="1333">按组盘托数与规则</text>
+              <text class="node-sub" x="420" y="1351">计算并选择目标货道</text>
+              <path class="connector" d="M420 1276 V1310"></path>
+
+              <polygon class="decision" points="420,1405 515,1442 420,1479 325,1442"></polygon>
+              <text class="node-text" x="420" y="1438">是否存在合法</text>
+              <text class="node-text" x="420" y="1455">可用货道？</text>
+              <path class="connector" d="M420 1368 V1405"></path>
+
+              <rect class="node wcs" x="325" y="1515" width="190" height="60" rx="10"></rect>
+              <text class="node-text" x="420" y="1539">确认目标货道</text>
+              <text class="node-sub" x="420" y="1557">组织 LED 数据</text>
+              <path class="connector" d="M420 1479 V1515"></path>
+              <text class="branch-label" x="432" y="1502">是</text>
+
+              <rect class="node error" x="605" y="1413" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="700" y="1436">生成退回任务</text>
+              <text class="node-sub" x="700" y="1454">托盘退回原入库口</text>
+              <path class="connector" d="M515 1442 H605"></path>
+              <text class="branch-label" x="550" y="1432">否</text>
+              <rect class="node error" x="605" y="1508" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="700" y="1531">LED 显示库位已满</text>
+              <text class="node-sub" x="700" y="1549">不更新库存</text>
+              <path class="connector" d="M700 1471 V1508"></path>
+
+              <rect class="node wcs" x="325" y="1605" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="420" y="1628">返回第一段搬运任务</text>
+              <text class="node-sub" x="420" y="1646">母车轨道＋货道 · RCS-01</text>
+              <path class="connector" d="M420 1575 V1605"></path>
+              <rect class="node rcs" x="605" y="1605" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="700" y="1628">搬运至母车轨道接货点</text>
+              <text class="node-sub" x="700" y="1646">按第一段响应执行</text>
+              <path class="connector" d="M515 1634 H605"></path>
+
+              <rect class="node rcs" x="605" y="1700" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="700" y="1723">请求第二段搬运</text>
+              <text class="node-sub" x="700" y="1741">任务号、LPN、源位置 · RCS-02</text>
+              <path class="connector" d="M700 1663 V1700"></path>
+
+              <rect class="node wcs" x="325" y="1700" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="420" y="1723">返回第二段目标</text>
+              <text class="node-sub" x="420" y="1741">任务号、LPN、货道、深度1～6</text>
+              <path class="connector" d="M605 1729 H515"></path>
+
+              <rect class="node rcs" x="605" y="1795" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="700" y="1818">到指定深度并反馈完成</text>
+              <text class="node-sub" x="700" y="1836">货道、深度、LPN · RCS-03</text>
+              <path class="connector" d="M420 1758 V1775 H700 V1795"></path>
+
+              <rect class="node wcs success" x="325" y="1795" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="420" y="1818">更新库存与任务</text>
+              <text class="node-sub" x="420" y="1836">返回成功 / 失败，失败重新反馈</text>
+              <path class="connector" d="M605 1824 H515"></path>
+
+              <rect class="node fwms success" x="45" y="1795" width="190" height="58" rx="10"></rect>
+              <text class="node-text" x="140" y="1818">接收上架完成</text>
+              <text class="node-sub" x="140" y="1836">IF-IN-09</text>
+              <path class="connector" d="M325 1824 H235"></path>
+              <rect class="node success" x="80" y="1880" width="120" height="44" rx="22"></rect>
+              <text class="node-text" x="140" y="1907">结束</text>
+              <path class="connector" d="M140 1853 V1880"></path>
+              </g>
+            </svg>
+          </div>
+        </figure>
+
+        <h3>主流程控制点摘要</h3>
+
+        <ol class="steps">
+          <li><span class="actor fwms">FWMS</span><strong>准备入库</strong><p>建单；组盘到音锋托盘前校验 LPN，完成整单组盘与清点。</p></li>
+          <li><span class="actor rcs">RCS</span> <span class="actor wcs">WCS</span><strong>入口识别</strong><p>常规口 103 / 106 / 109 或备用口 263 扫码识别 LPN，WCS 判断是否已有入库单及明细。</p></li>
+          <li><span class="actor wcs">WCS</span> <span class="actor fwms">FWMS</span><strong>完整组盘校验</strong><p>无本地数据则按 LPN 查询；相关入库单未全部完成时中止。</p></li>
+          <li><span class="actor wcs">WCS</span><strong>生成业务数据</strong><p>生成入库单、明细、上架任务；同一 LPN 重复请求保持幂等。</p></li>
+          <li><span class="actor wcs">WCS</span> <span class="actor rcs">RCS</span><strong>第一段请求与响应</strong><p>RCS 识别入口托盘后携带 LPN、源位置发起第一段请求；WCS 分配目标货道，返回任务号、LPN、母车轨道编号和货道编号。</p></li>
+          <li><span class="actor wcs">WCS</span><strong>LED 显示</strong><p>按入库场景组织 Vendor、ASN、SKU、Qty、Plt、LPN、LPNQty、Msg；异常时 Msg 显示明确原因。</p></li>
+          <li><span class="actor rcs">RCS</span> <span class="actor wcs">WCS</span><strong>到位与完成</strong><p>RCS 发起第一段请求（LPN、源位置），WCS 返回任务号、LPN、母车轨道编号和货道编号；到达母车轨道接货点后，RCS 发起第二段请求（第一段任务号、LPN、源位置），WCS 返回第一段任务号、LPN、货道编号和深度（1～6）；RCS 到达指定深度后反馈第一段任务号、LPN、货道编号和深度，WCS 返回成功 / 失败并更新库存与任务。返回失败时 RCS 重新发起完成反馈，WCS 幂等处理。WCS 完成库存及任务更新后回传 FWMS。</p></li>
+        </ol>
+
+        <div class="grid-3" style="margin-top:16px">
+          <div class="callout"><strong>数据门：</strong>未整单组盘完成，不生成部分入库单；混托须等待所有关联单据组盘完成。</div>
+          <div class="callout"><strong>容量门：</strong>无合法目标货道，不允许继续进入库内。</div>
+          <div class="callout"><strong>完成门：</strong>未收到第一段任务号、LPN、货道编号和深度的完成反馈，不得完成主任务或回传上架；WCS 返回失败时 RCS 重新反馈。</div>
+        </div>
+      </section>
+
+      <section id="scenarios" class="section-card">
+        <div class="section-head">
+          <div>
+            <span class="section-index">04 · BUSINESS SCENARIOS</span>
+            <h2>场景差异</h2>
+            <p class="lead">仅列相对主流程的差异，公共步骤不重复描述。</p>
+          </div>
+          <span class="badge gray">3 个场景</span>
+        </div>
+
+        <details class="scenario" open>
+          <summary><span class="scenario-name"><span class="badge blue">场景一</span> 来料入库</span><span>采购到货</span></summary>
+          <div class="scenario-body">
+            <p><strong>包装数据：</strong>包装数据缺失或错误时，由 FWMS 按物料＋供应商维护托装量、箱装量，并通过 IF-IN-03 同步 WCS 后进入主流程。留样托单独组盘，质检完成前暂不进入自动化库，完成后通过质检还料入库。</p>
+          </div>
+        </details>
+
+        <details class="scenario" open>
+          <summary><span class="scenario-name"><span class="badge blue">场景二</span> 退料入库</span><span>生产退料</span></summary>
+          <div class="scenario-body">
+            <p>不留样、不检验包装，其余按主流程执行。</p>
+          </div>
+        </details>
+
+        <details class="scenario" open>
+          <summary><span class="scenario-name"><span class="badge purple">场景三</span> 质检还料</span><span>原箱 / 损耗 / 多单同托</span></summary>
+          <div class="scenario-body">
+            <ul class="key-list" style="margin-top:14px">
+              <li><strong>还料结果：</strong>原箱或部分损耗有实物时，由 FWMS 生成入库；全部损耗无实物，不生成 WCS 入库任务。</li>
+              <li><strong>多单同托：</strong>多个入库单的物料可组盘到同一个留样托，留样托 LPN 可关联多个入库单的组盘明细。WCS 按留样托 LPN 获取全部关联明细，并保留每条明细对应的入库单。</li>
+              <li><strong>呼叫货架：</strong>来源 UPN 已与 LPN 绑定，可作为 LPN 查询组盘信息；按外部单号＋供应商＋SKU 查找尾托。尾托指库存量小于托装量的托盘，存在多个时呼叫 UPN 数量最少的一个。</li>
+              <li><strong>无尾托：</strong>提示绑定新托盘。试产入库单一单对应一箱或多箱，可能出现整单仅有留样；该场景质检还料时同样按无尾托处理。</li>
+              <li><strong>执行：</strong>每次处理一个还料 UPN，归还到对应原入库单的托盘；无尾托时按上述新托盘规则处理。扫描当前 UPN 和目标托盘 LPN，校验外部单号一致后生成入库单据、更新库存并回传 FWMS。LED 仅显示当前 UPN 还料对应的信息。</li>
+            </ul>
+          </div>
+        </details>
+
+        <h3 style="margin-top:20px">LED 屏显示内容</h3>
+        <div class="callout"><strong>现场样图字段：</strong>Vendor、ASN、SKU、Qty、Plt、LPN、LPNQty、Msg。一般情况下，一个 ASN 单只有一个物料；Qty 显示“ASN 单物料总数量 / 已上架数量”，Plt 显示“ASN 单总托盘数 / 已上架托盘数”。<code>InStart</code> 表示“开始入库”，来料入库、退料入库、质检还料均使用该状态。</div>
+
+        <figure class="led-sample">
+          <a href="assets/LED样图-入库.png" target="_blank" rel="noopener" title="点击查看原图">
+            <img src="assets/LED样图-入库.png" alt="音锋仓入库 LED 屏现场样图" loading="lazy">
+          </a>
+          <figcaption>入库 LED 现场样图（缩略显示，点击查看原图）</figcaption>
+        </figure>
+
+        <div class="table-wrap">
+          <table class="compact-table led-table">
+            <colgroup><col style="width:18%"><col style="width:43%"><col style="width:39%"></colgroup>
+            <thead><tr><th>场景</th><th>显示内容</th><th>显示规则</th></tr></thead>
+            <tbody>
+              <tr><td>来料入库</td><td>Vendor、ASN、SKU、Qty、Plt、LPN、LPNQty；Msg 显示 <code>InStart</code>（开始入库）。</td><td>入口任务校验完成且目标货道预留成功后显示当前托盘信息。</td></tr>
+              <tr><td>退料入库</td><td>Vendor、ASN、SKU、Qty、Plt、LPN、LPNQty；Msg 显示 <code>InStart</code>（开始入库）。</td><td>字段结构与来料入库一致。</td></tr>
+              <tr><td>质检还料</td><td>当前 UPN 还料对应的 Vendor、ASN、SKU、Qty、Plt、LPN、LPNQty；Msg 显示 <code>InStart</code>（开始入库）。</td><td>每次处理一个 UPN，归还到对应原入库单的托盘；LED 仅显示当前 UPN 对应的信息，切换 UPN 时同步刷新。</td></tr>
+              <tr><td>FWMS 未组盘完毕</td><td>LPN；Msg 显示“FWMS 未组盘完毕”。</td><td>WCS 按 LPN 请求组盘明细，FWMS 返回未组盘完毕时，拦截本次入库，不生成入库及搬运任务；待 FWMS 组盘完成后重新入库。</td></tr>
+              <tr><td>无可用货道</td><td>LPN；Msg 显示“库位已满”。</td><td>不下发搬运任务、不更新库存，并显示明确原因。</td></tr>
+              <tr><td>校验或任务异常</td><td>LPN；可识别时保留 Vendor、ASN、SKU；Msg 显示具体异常原因。</td><td>不得只显示通用失败；原因应能指导现场处理。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top:20px">LED 字段说明</h3>
+        <div class="table-wrap">
+          <table class="compact-table led-table">
+            <colgroup><col style="width:18%"><col style="width:57%"><col style="width:25%"></colgroup>
+            <thead><tr><th>字段</th><th>显示含义</th><th>口径状态</th></tr></thead>
+            <tbody>
+              <tr><td>Vendor</td><td>供应商编码。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>ASN</td><td>入库单标识；一般情况下，一个 ASN 单只有一个物料。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>SKU</td><td>物料编码。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>Qty</td><td>ASN 单物料总数量 / 已上架数量，如 5760/3840。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>Plt</td><td>ASN 单总托盘数 / 已上架托盘数，如 3/2。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>LPN</td><td>当前托盘 LPN。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>LPNQty</td><td>当前 LPN 的组盘数量。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>Msg</td><td>入库状态或异常原因；所有入库场景开始入库时统一显示 <code>InStart</code>（开始入库），异常时显示具体原因。</td><td><span class="badge green">明确</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top:20px">PDA - 清除站点托盘占位</h3>
+<p><strong>背景与适用范围：</strong>异常托盘调整后重新投线，或更换其他托盘投线时，若 RCS 仍保留原托盘占位，扫码器将无法识别后续 LPN。当前通过 PLC 电控系统手动清除占位；未来运维人员不再允许直接操作 PLC，因此新增【PDA - 清除站点托盘占位】，适用于入库口、出库口。</p>
+<ol><li>运维人员在【PDA - 清除站点托盘占位】选择站点，执行清除。</li><li>WCS 调用 RCS-13，传入站台号。</li><li>RCS 返回成功后，WCS 更新点位信息；出库口由 WCS 按点位状态重新选择 LED 显示内容。</li><li>托盘重新投线，扫码器重新识别 LPN，由 WCS 下发对应门型 LED 信息。</li></ol>
+<p><strong>失败处理：</strong>RCS 清除失败时提示失败原因，允许重试；WCS 不将点位标记为已清除。</p>
+
+      </section>
+
+      <section id="allocation" class="section-card">
+        <div class="section-head">
+          <div>
+            <span class="section-index">05 · PUTAWAY STRATEGY</span>
+            <h2>货道分配规则</h2>
+          </div>
+          <span class="badge orange">WCS 决策</span>
+        </div>
+        <div class="callout">统一引用<a href="../【OPPO】业务方案-音锋仓-回库策略-20261104v1.html">《音锋仓回库策略方案》</a>，包括托盘存放条件、货道匹配、轨道评分、入库整单规划与逐托绑定、占用及搬运执行规则。</div>
+        <p>货道锁规则参见<a href="../【OPPO】业务方案-音锋仓-货道锁-20261102v1.html">《音锋仓货道锁方案》</a>；接口定义见本方案<a href="#wcs-rcs">WCS 与 RCS 接口清单</a>。</p>
+      </section>
+
+      <section id="functions" class="section-card">
+        <div class="section-head">
+          <div>
+            <span class="section-index">06 · INTERFACE LIST</span>
+            <h2>接口清单</h2>
+            <p class="lead">列明接口方向、业务触发条件和核心数据。</p>
+          </div>
+          <span class="badge purple">17 项</span>
+        </div>
+
+        <h3>WCS 与 FWMS</h3>
+        <div class="table-wrap"><table class="compact-table"><thead><tr><th>编号</th><th>方向</th><th>接口能力</th><th>接口功能</th></tr></thead><tbody>
+          <tr><td>IF-IN-01</td><td>FWMS → WCS</td><td>LPN 可用性检查</td><td>FWMS 组盘前调用，返回可用 / 不可用及原因。</td></tr>
+          <tr><td>IF-IN-02</td><td>WCS → FWMS</td><td>按 LPN 获取组盘明细</td><td>入口识别且未生成入库单及明细时调用；返回该 LPN 关联的全部入库单及组盘明细，并标识每条明细的单据归属；混托须校验所有关联单据。来料入库查询不返回留样托组盘数据；质检完成后按质检还料流程处理。</td></tr>
+          <tr><td>IF-IN-03</td><td>FWMS → WCS</td><td>包装数据同步</td><td>包装维护或变更后调用；按物料＋供应商维度同步托装量、箱装量，版本可追溯。</td></tr>
+          <tr><td>IF-IN-09</td><td>WCS → FWMS</td><td>上架完成</td><td>WCS 接收指定货道及深度的搬运完成反馈，完成库存和任务更新后调用；失败可重试，同一业务仅成功一次。</td></tr>
+        </tbody></table></div>
+
+        <h3 id="wcs-rcs" style="margin-top:20px">WCS 与 RCS</h3>
+          <p>双方已确认；编号与确认截图第1～13项对应。WCS 指中控 WCS，RCS 指音锋 WCS 管理系统。</p>
+          <div class="table-wrap"><table class="compact-table rcs-table"><colgroup><col style="width:8%"><col style="width:11%"><col style="width:17%"><col style="width:34%"><col style="width:30%"></colgroup><thead><tr><th>编号</th><th>方向</th><th>接口</th><th>触发与规则</th><th>入参 / 出参</th></tr></thead><tbody>
+<tr><td>RCS-01</td><td>RCS → WCS</td><td>入库 / 回库搬运请求（第一段）</td><td>入库：103 / 106 / 109 或备用口 263（4号口）识别组盘托盘后调用。回库：4 / 5 / 6号口，适用于出库余料、盘点、隔离筛选、合板理货、呼叫货架回库及空托盘入库；4号口识别托盘后触发，5 / 6号口由物理按钮触发。</td><td>入参：容器号（LPN）、源位置。出参：任务号、容器号（LPN）、母车轨道编号、货道编号。</td></tr>
+<tr><td>RCS-02</td><td>RCS → WCS</td><td>入库 / 回库搬运请求（第二段）</td><td>到达母车轨道接货点后，RCS 请求 WCS 货道深度。</td><td>入参：第一段任务号、容器号（LPN）、源位置（母车轨道接货点）。出参：第一段任务号、容器号（LPN）、货道编号、深度（1～6）。</td></tr>
+<tr><td>RCS-03</td><td>RCS → WCS</td><td>托盘搬运任务执行完成反馈</td><td>RCS 到达指定货道深度后调用；WCS 返回失败时，RCS 重新发起完成反馈，重复反馈幂等处理。</td><td>入参：第一段任务号、容器号、货道编号、深度。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-04</td><td>WCS → RCS</td><td>下发 LED 显示数据</td><td>WCS 统一控制 LED 下发逻辑。入口任务校验完成、出库任务各节点，以及盘点、隔离筛选等业务调用。出库口有托盘时优先展示当前 LPN 的实时信息；无托盘时，按搬运任务下发分配到该口的时间升序，展示最早待处理任务对应的业务信息。托盘到口、离口、清除占位成功、待处理队列变化时重新选择内容；刷新失败重试前按当前状态重新判断。Qty 为“ASN 单物料总数量 / 已上架数量”，Plt 为“ASN 单总托盘数 / 已上架托盘数”；支持携带容器关联入库单明细；质检还料每次仅显示当前 UPN 对应信息；异常时 Msg 显示明确原因。</td><td>入参：Vendor、ASN、SKU、Qty、Plt、LPN、LPNQty、Msg、OrderType（ASN、SO 等）。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-05</td><td>WCS → RCS</td><td>出库搬运任务下发</td><td>适用于出库、盘点、理货出库、隔离筛选、呼叫货架及空容器出库。</td><td>入参：任务号、货道编号、深度、目的地（259、260、263、281、282、283工作台）、容器号、优先级。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-06</td><td>RCS → WCS</td><td>托盘出库任务执行反馈</td><td>托盘从货道搬出到母车卸货点：status=1（搬出成功）；从母车卸货点到工作台（出库口）：status=2（到达）。</td><td>入参：任务号、容器号、状态（1：搬出成功；2：到达）。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-07</td><td>WCS → RCS</td><td>托盘移库任务下发</td><td>出库浅位移库仅在同巷道（母车轨道）两侧库区进行，不跨层。WCS 指定目标货道及深度；同巷道无空货道时，LED 报错提醒，人工呼叫出库，作业完成后再回库。一个托盘下发一个移库任务。</td><td>入参：任务号、容器号、源货道、源深度、目标货道、目标深度。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-08</td><td>RCS → WCS</td><td>托盘移库任务执行反馈</td><td>移库任务执行后反馈，WCS 按反馈更新托盘目标位置。</td><td>入参：任务号、容器号、目标货道、目标深度。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-09</td><td>WCS → RCS</td><td>取消 / 结束搬运任务</td><td>取消可安全终止的搬运任务，并同步释放 WCS 任务。取消：RCS“待执行”可取消，“执行中”不可取消。结束：RCS 各状态均支持发起结束请求，是否允许结束由 RCS 判断。例如小车故障、设备未上报状态但货已到目标位置时，人工点击结束当前任务。</td><td>入参：任务号、类型（取消 / 结束）。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-10</td><td>RCS → WCS</td><td>RCS 错误上报</td><td>包括空取（当前位置无托盘）、取货库位有阻挡托盘、子母车任务不一致、小车电量低、任务非法（例如货道容量为3却指定深度4）等错误。</td><td>入参：错误码、错误描述、任务号（选填）、容器号（选填）、设备号。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-11</td><td>WCS → RCS</td><td>托盘输送线搬运任务下发</td><td>通过 PDA 首页独立菜单【PDA - 搬运至其他出库口】操作，例如从5号口搬到3号口。</td><td>入参：容器号、任务号、起始点位、目标点位。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-12</td><td>RCS → WCS</td><td>托盘输送线搬运任务执行反馈</td><td>托盘开始搬运：status=1（搬出成功）；托盘到工作台（出库口）：status=2（到达）。</td><td>入参：任务号、容器号、状态（1：搬出成功；2：到达）。出参：成功 / 失败。</td></tr>
+<tr><td>RCS-13</td><td>WCS → RCS</td><td>清除站点托盘占位</td><td>适用于入库口、出库口。RCS 保留原托盘占位时无法识别后续 LPN；异常托盘调整后重新投线或更换托盘投线前，运维人员在【PDA - 清除站点托盘占位】选择站点，由 WCS 请求 RCS 清除占位。返回成功后 WCS 更新点位信息，扫码器重新识别投线托盘 LPN 并由 WCS 下发门型 LED 信息；出库口按点位状态重新选择显示内容。失败时提示原因、允许重试，WCS 不将点位标记为已清除。</td><td>入参：站台号。出参：成功 / 失败。</td></tr>
+</tbody></table></div>
+
+      </section>
+
+      <section id="exceptions" class="section-card">
+        <div class="section-head">
+          <div>
+            <span class="section-index">07 · EXCEPTION MATRIX</span>
+            <h2>异常识别与处理矩阵</h2>
+            <p class="lead">异常处理统一归并识别方、系统动作、现场动作、账务结果和口径状态。</p>
+          </div>
+          <span class="badge red">禁止静默失败</span>
+        </div>
+
+        <div class="callout"><strong>入口异常统一原则：</strong>超高、超尺寸、扫码失败、无可用货道或未获取到组盘明细时，托盘不得继续进入库内，应展示明确原因并退回入库口。超尺寸 / 扫码失败自动退回；未获取到组盘明细时需人工点击退回。</div>
+
+        <div class="table-wrap">
+          <table class="compact-table">
+            <thead><tr><th>异常场景</th><th>识别与处理</th><th>现场及账务结果</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td>LPN 不可用</td><td>WCS 识别，向 FWMS 返回不可用及原因，不生成数据。</td><td>FWMS 更换托盘后重新组盘；不入账。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>相关单据未全部组盘</td><td>FWMS 识别，WCS 整托拦截，不生成部分入库数据。</td><td>完成所有关联单据组盘后重试；不入账。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>包装缺失 / 错误</td><td>操作员 / WCS 识别，停止托型与尾托计算，提示 FWMS 维护并重新同步。</td><td>不进入自动化库；不入账。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>超高 / 超尺寸 / 扫码失败</td><td>RCS / 入口设备识别，WCS 不生成任务并记录原因。</td><td>自动退回原入口；超高、超尺寸由 FWMS 拆盘或调整后重试；不入账。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>未获取到组盘明细</td><td>WCS 识别，显示未获取到组盘明细的原因并阻止继续入库。</td><td>人工点击退回，托盘退回入库口；不生成任务，不入账。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>无可用货道 / 目标不可用</td><td>WCS / RCS 识别，不下发或停止任务，释放并重算目标；LED 显示“库位已满”。</td><td>等待新目标或退回原入口；不入最终库位账。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>货道任务阻挡 / 顺序错误</td><td>RCS 设备报警；WCS 停止后续任务并保留货道锁，人工排障后按状态恢复。</td><td>不得由 WCS 猜测绕行或并发下发；保持原账。</td><td><span class="badge green">明确</span></td></tr>
+              <tr><td>质检还料外部单号不一致</td><td>WCS 识别，拒绝绑定并提示重新扫描 UPN / LPN。</td><td>更换正确目标托盘；不更新库存。</td><td><span class="badge green">明确</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="footer">OPPO WCS · 音锋仓入库业务方案 · 2026-08-20 · 进行中方案</footer>
+
+  <script>
+    (() => {
+      const sections = [...document.querySelectorAll('main section[id]')];
+      const navLinks = [...document.querySelectorAll('.side-nav a')];
+      const linkMap = new Map(navLinks.map(link => [link.getAttribute('href').slice(1), link]));
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        navLinks.forEach(link => link.classList.remove('active'));
+        linkMap.get(visible.target.id)?.classList.add('active');
+      }, { rootMargin: '-18% 0px -68% 0px', threshold: [0, .2, .5] });
+      sections.forEach(section => observer.observe(section));
+      linkMap.get(sections[0]?.id)?.classList.add('active');
+
+      const table = document.getElementById('requirementsTable');
+      const search = document.getElementById('requirementSearch');
+      const filterButtons = [...document.querySelectorAll('.filter-button')];
+      let activeFilter = 'all';
+      const applyTableFilter = () => {
+        const query = search.value.trim().toLowerCase();
+        [...table.tBodies[0].rows].forEach(row => {
+          const typeMatch = activeFilter === 'all' || row.dataset.type === activeFilter;
+          const textMatch = !query || row.textContent.toLowerCase().includes(query);
+          row.hidden = !(typeMatch && textMatch);
+        });
+      };
+      search.addEventListener('input', applyTableFilter);
+      filterButtons.forEach(button => button.addEventListener('click', () => {
+        activeFilter = button.dataset.filter;
+        filterButtons.forEach(item => item.classList.toggle('active', item === button));
+        applyTableFilter();
+      }));
+
+      const scenarios = [...document.querySelectorAll('details.scenario')];
+      let printState = [];
+      window.addEventListener('beforeprint', () => {
+        printState = scenarios.map(item => item.open);
+        scenarios.forEach(item => { item.open = true; });
+      });
+      window.addEventListener('afterprint', () => {
+        scenarios.forEach((item, index) => { item.open = printState[index]; });
+      });
+      document.getElementById('printPage').addEventListener('click', () => window.print());
+    })();
+  </script>
+</body>
+</html>

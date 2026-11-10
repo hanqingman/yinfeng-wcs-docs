@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>音锋仓下架策略-整托优先方案</title>
+  <style>
+    :root{--ink:#17253a;--muted:#5d6b80;--blue:#0868d7;--navy:#071f3d;--line:#d8e2ef;--canvas:#f3f7fb}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.8 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+    a{color:#0a4b96;text-underline-offset:3px}header{background:linear-gradient(125deg,#071f3d,#0a4b96);color:white;padding:40px max(24px,calc((100% - 1160px)/2))}
+    header a{color:#e2efff}h1{margin:18px 0 8px;font-size:clamp(28px,4vw,40px);line-height:1.3}header p{color:#dcecff;margin:8px 0}.meta{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}.meta span{padding:3px 12px;border:1px solid #ffffff55;border-radius:20px;font-size:12px}
+    .layout{max-width:1210px;margin:auto;padding:28px 24px 60px;display:grid;grid-template-columns:190px minmax(0,1fr);gap:24px}nav{position:sticky;top:20px;align-self:start;background:white;border:1px solid var(--line);border-radius:14px;padding:12px}nav a{display:block;padding:9px 10px;text-decoration:none;border-radius:7px}nav a:hover{background:#edf5ff}main{min-width:0}
+    section{scroll-margin-top:20px;background:white;border:1px solid var(--line);border-radius:16px;padding:26px;margin-bottom:22px;box-shadow:0 7px 22px #071f3d08}.eyebrow{color:var(--blue);font-size:12px;font-weight:750;letter-spacing:.08em}h2{margin:5px 0 14px;font-size:24px;line-height:1.4}h3{margin:22px 0 8px;font-size:18px}p{margin:10px 0}ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}.note{padding:14px 18px;border-left:4px solid var(--blue);background:#eff6ff;border-radius:7px;margin:16px 0}.note.green{border-color:#087f6f;background:#eaf8f2}
+    .sequence{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.step{background:#f2f7ff;border:1px solid #d5e5fb;padding:13px;border-radius:10px}.step b{display:block;color:#0a4b96;font-size:12px}.step span{font-weight:650}.table-wrap{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px}table{width:100%;min-width:610px;border-collapse:collapse;font-size:14px}th,td{padding:12px 14px;vertical-align:top;text-align:left;border-bottom:1px solid var(--line)}th{background:#095cb9;color:white}tr:nth-child(even) td{background:#f5f9ff}tr:last-child td{border-bottom:0}.small{font-size:13px;color:var(--muted)}footer{color:var(--muted);padding:0 5px}
+    @media(max-width:800px){.layout{display:block;padding:18px 14px}nav{position:static;display:flex;flex-wrap:wrap;margin-bottom:18px}nav a{padding:6px 10px}section{padding:20px}.sequence{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media print{body{background:white;font-size:11pt}header{background:white;color:var(--ink);padding:0 0 15px}header a,header p{color:var(--ink)}.meta span{border-color:var(--line)}.layout{display:block;padding:0}nav{display:none}section{box-shadow:none;padding:18px;border-radius:0}h2,h3{break-after:avoid}tr,.step{break-inside:avoid}.table-wrap{overflow:visible}table{min-width:0}a{color:var(--ink)}}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="【OPPO】需求梳理-音锋仓-出库业务-20260822v1.html#strategy">← 音锋仓出库业务方案 · 预占、下架与多进深清障</a>
+    <h1>音锋仓下架策略-整托优先方案</h1>
+    <p>在下架策略的库存规则中新增“整托优先”，支持音锋仓整托选择与同货道连续出库。</p>
+    <div class="meta"><span>音锋仓</span><span>2026-09-22 · v1</span><span>待业务评审</span></div>
+  </header>
+  <div class="layout">
+    <nav aria-label="章节导航">
+      <a href="#overview">01 规则定位</a>
+      <a href="#groups">02 通用规则衔接</a>
+      <a href="#selection">03 整托优先库存匹配</a>
+      <a href="#lane">04 同货道连续出库</a>
+      <a href="#examples">05 案例</a>
+    </nav>
+    <main>
+      <section id="overview">
+        <span class="eyebrow">SECTION 01</span><h2>规则定位</h2>
+        <p>在【WCS - 策略管理 - 下架策略】的“库存规则”中新增“整托优先”，与“效率优先”“清空容器优先（尾数优先）”同级。</p>
+        <p>选择本规则后，在通用策略已确定的每个 UPN 分组内，先预占整托，结合多板区同货道连续出库选择托盘，再以部分托盘补足剩余需求。</p>
+      </section>
+      <section id="groups">
+        <span class="eyebrow">SECTION 02</span><h2>通用规则衔接</h2>
+        <p>筛选本次可出库的 UPN、分组及可用量计算沿用通用下架策略（通用文档未纳入本评审站）：</p>
+        <ul>
+          <li><strong>分组顺序：</strong>优先策略 → 容器规则 → 目标库区。先进先出按配置的日期类型、范围分段，无配置时默认一个分段；同优先级容器或库区合组查找。</li>
+          <li><strong>临期大库龄优先：</strong>可配置，默认关闭；开启后按通用独立规则先行处理，剩余需求再进入常规分组。</li>
+          <li><strong>音锋仓配置：</strong>容器使用托盘，库区按托盘实际所在位置匹配下表配置。</li>
+        </ul>
+        <h3>音锋仓库区推荐配置</h3>
+        <p>预占优先级：输送线-从库区到工作台 ＞ 单板区、多板区 ＞ 混板区 ＞ 输送线-回库途中。优先级数字越小越先处理，同值合组查找。</p>
+        <div class="table-wrap"><table aria-label="音锋仓库区配置">
+          <thead><tr><th>库区</th><th>推荐优先级</th><th>配置说明</th></tr></thead>
+          <tbody>
+            <tr><td>输送线-从库区到工作台</td><td>1</td><td>优先预占正在从库区搬运至工作台的托盘可用库存。</td></tr>
+            <tr><td>单板区 / 多板区（含 3 / 4 / 6 板区）</td><td>2</td><td>单板区与多板区同级合组比较整托；多板区内部按可连续出库数量及到达时间选择货道，不按深度固定排序。</td></tr>
+            <tr><td>混板区</td><td>3</td><td>输送线出库途中及单板、多板区库存不足时，再匹配混板区。</td></tr>
+            <tr><td>输送线-回库途中</td><td>4</td><td>前述库存不足时，最后匹配正在回库途中的托盘可用库存。</td></tr>
+          </tbody>
+        </table></div>
+        <p class="small">同一日期分段内，较高优先级分组的部分库存也先于较低优先级分组的整托库存处理；库区推荐顺序不越过前置日期分段。</p>
+        <div class="note">“整托优先”仅在当前分组内生效，不能跳过更高优先级分组。当前分组不足时，按通用分组顺序继续。</div>
+      </section>
+      <section id="selection">
+        <span class="eyebrow">SECTION 03</span><h2>整托优先库存匹配</h2>
+        <ol>
+          <li><strong>找整托：</strong>托盘实际库存全部符合当前分组条件、可全部预占，且数量不超过剩余需求，才算本次可选整托。标准托装量为 1000、实际库存为 900 时，全部预占 900 也算整托；托盘还留有其他库存则不算。</li>
+          <li><strong>选整托：</strong>多个整托可选时，多板区优先按<a href="#lane">同货道连续出库规则</a>选择；同一货道从外向内后进先出，不同货道之间按最外侧可取托盘进入货道时间从早到晚选择。每选一托，重新计算剩余需求。</li>
+          <li><strong>补剩余量：</strong>没有可选整托时，不同货道之间按最外侧可取托盘进入货道时间从早到晚选择部分托盘，每托只预占所需数量；同一货道仍从外向内取货。</li>
+        </ol>
+        <p>排序时间取托盘本次进入货道的到达时间；回库、移库后更新，已生成任务不重新选托。当前分组不足时，按分组顺序继续查找。</p>
+      </section>
+      <section id="lane">
+        <span class="eyebrow">SECTION 04</span><h2>多板区同货道连续出库</h2>
+        <p>当前分组有多个整托可选时，优先从同一货道连续取货，减少货道切换。</p>
+        <ol>
+          <li>从货道外侧向内查看整托候选；遇到不参与本次出库或不能执行的托盘，就停止计算该货道的连续可取量。</li>
+          <li>比较多个候选货道时，优先选择能连续满足剩余整托需求的货道；有多个货道均能满足时，选择最外侧可取托盘本次进入货道时间较早的货道。若均不能满足，选择连续可取量最多的货道；仍有多个货道并列时，按同一时间规则选择。</li>
+          <li>从选中货道的外侧开始依次预占。需求满足或遇到阻挡时停止，再比较其他货道；不为凑同货道额外清障。</li>
+        </ol>
+        <div class="note green">同一货道从外向内后进先出；多个货道之间按最外侧可取托盘进入货道时间从早到晚选择。仅比较当前能直接取出的托盘，不按货道总深度排序。</div>
+      </section>
+      <section id="examples">
+        <span class="eyebrow">SECTION 05</span><h2>案例</h2>
+        <p>共同前提：下架策略选择“整托优先”，临期大库龄优先未开启；本次可出库的 UPN 已按通用规则筛选，均属于当前同一分组，且无其他订单预占。除特别说明外，托盘可直接取出；非多板区同货道案例不存在连续出库优势。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>案例</th><th>具体前提</th><th>需求量</th><th>选择结果</th></tr></thead>
+          <tbody>
+            <tr><td>按实际库存算整托</td><td>标准托装量 1000；托盘实际库存 900，全部符合本次预占条件。</td><td>900</td><td>整托预占 900。</td></tr>
+            <tr><td>整托先于部分托盘</td><td>A 托实际库存 1000，全部符合条件；B 托实际库存 1000，其中只有 400 符合条件，另有 600 不参与本组。</td><td>1000</td><td>选择 A 托整托；B 托符合条件的 400 仍属于部分托盘库存。</td></tr>
+            <tr><td>多个货道按时间选择</td><td>P1、P2 各有 1000，全部符合条件且位于不同货道外侧；P1 本次进入货道的时间较早。</td><td>1000</td><td>选择 P1 整托。</td></tr>
+            <tr><td>多板区同货道连续出库</td><td>多板区 A 货道从外向内连续两托可取；B、C 货道外侧各一托可取；每托 1000，均可整托预占。</td><td>2000</td><td>选择 A 货道连续两托。</td></tr>
+            <tr><td>整托后补剩余量</td><td>A 托 1000、B 托 600，均可整托预占且位于不同货道外侧；A 托本次进入货道的时间较早。</td><td>1100</td><td>先预占 A 托 1000，再从 B 托预占 100。</td></tr>
+            <tr><td>没有可选整托</td><td>A 托 1000、B 托 800，均全部符合条件且位于不同货道外侧；A 托本次进入货道的时间较早。</td><td>300</td><td>两托库存均超过需求，按货道间先进先出从 A 托预占 300。</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+      <footer><a href="【OPPO】需求梳理-音锋仓-出库业务-20260822v1.html#strategy">返回音锋仓出库业务方案</a></footer>
+    </main>
+  </div>
+</body>
+</html>

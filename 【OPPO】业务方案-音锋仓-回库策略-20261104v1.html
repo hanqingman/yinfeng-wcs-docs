@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>音锋仓回库策略方案</title>
+  <style>
+    :root{--ink:#172b43;--muted:#5c6d82;--blue:#075fc4;--line:#d9e3ef;--canvas:#f2f6fb}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--canvas);font:15px/1.8 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}a{color:var(--blue);text-underline-offset:3px}
+    header{background:#082d56;color:white;padding:32px max(24px,calc((100% - 1180px)/2))}h1{font-size:clamp(28px,4vw,38px);line-height:1.35;margin:0 0 12px}.meta{color:#d4e5f8;font-size:13px}header p{margin:8px 0 0}
+    .layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:22px;max-width:1228px;margin:auto;padding:24px}nav{position:sticky;top:20px;align-self:start;border:1px solid var(--line);background:white;border-radius:12px;padding:10px}nav a{display:block;padding:8px 10px;text-decoration:none;border-radius:6px}nav a:hover{background:#edf5ff}main{min-width:0}section{background:white;padding:24px;border:1px solid var(--line);border-radius:14px;margin-bottom:20px;scroll-margin-top:20px}h2{margin:0 0 14px;font-size:23px;line-height:1.45}h3{font-size:18px;margin:20px 0 8px}p{margin:10px 0}ul,ol{padding-left:24px;margin:10px 0}li{margin:7px 0}.note{padding:12px 16px;background:#eef5ff;border-left:4px solid var(--blue);border-radius:6px;margin:14px 0}.formula{font-weight:650;background:#eef5ff;border:1px solid #d6e5f9;border-radius:8px;padding:14px 16px;margin:14px 0}.table-wrap{border:1px solid var(--line);border-radius:9px;overflow:hidden;margin:14px 0}table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:14px}th,td{padding:11px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);overflow-wrap:anywhere;word-break:break-word}th{color:white;background:var(--blue)}tr:nth-child(even) td{background:#f5f9ff}tr:last-child td{border-bottom:0}footer{max-width:1228px;margin:auto;padding:0 24px 30px;color:var(--muted);font-size:13px}
+    @media(max-width:800px){.layout{display:block;padding:16px}nav{position:static;display:flex;flex-wrap:wrap;margin-bottom:16px}nav a{padding:6px 9px}section{padding:18px}th,td{padding:9px 8px;font-size:13px}}
+    @media print{body{background:white;font-size:11pt}header{background:white;color:var(--ink);padding:0 0 16px}.meta{color:var(--muted)}.layout{display:block;padding:0}nav{display:none}section{border-radius:0;margin-bottom:14px}h2,h3{break-after:avoid}tr{break-inside:avoid}th{color:var(--ink);background:#eaf2fc}footer{padding:8px 0}a{color:var(--ink)}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>音锋仓回库策略方案</h1>
+    <div class="meta">V1 · 2026-11-04 · 进行中方案 / 待评审</div>
+    <p>共用货道匹配算法：入库整单规划，其他业务逐托动态分配。</p>
+  </header>
+  <div class="layout">
+    <nav aria-label="章节导航">
+      <a href="#mode">1 业务处理方式</a>
+      <a href="#storage">2 托盘与存放条件</a>
+      <a href="#matching">3 货道匹配算法</a>
+      <a href="#score">4 轨道评分</a>
+      <a href="#inbound">5 入库规划与绑定</a>
+      <a href="#return">6 其他业务回库</a>
+      <a href="#execution">7 占用与搬运执行</a>
+      <a href="#examples">8 分配样例</a>
+    </nav>
+    <main>
+      <section id="mode">
+        <h2>1. 业务处理方式</h2>
+        <p>适用于入库、盘点回库、隔离筛选回库、出库余料回库、理货回库、呼叫出库后回库等工作台到库位的搬运。</p>
+        <div class="table-wrap"><table>
+          <colgroup><col style="width:16%"><col style="width:42%"><col style="width:42%"></colgroup>
+          <thead><tr><th>项目</th><th>入库业务</th><th>其他业务回库</th></tr></thead>
+          <tbody>
+            <tr><td>数量来源</td><td>首托 LPN 获取整单组盘明细，统计托盘数量</td><td>当前托盘＋有可用库存的同类待回库托盘数量，排除入库业务托盘</td></tr>
+            <tr><td>货道计算</td><td>首托触发整单规划</td><td>每托投线重新计算</td></tr>
+            <tr><td>搬运任务生成与响应</td><td>按托数预建“新建”搬运任务，指定货道、暂不绑定 LPN。RCS 扫码申请时，按轨道评分选择同组搬运任务绑定 LPN，满足货道锁及顺序后执行并响应。</td><td>RCS 扫码或按物理按钮申请时，为当前 LPN 新建搬运任务、指定货道，并直接在响应中返回 RCS。</td></tr>
+            <tr><td>后续处理</td><td>使用剩余规划搬运任务</td><td>根据最新状态重新匹配</td></tr>
+          </tbody>
+        </table></div>
+        <p>“同类”指<strong>外部单号＋供应商＋SKU</strong>均一致。已分配搬运任务的托盘计入货道占用，不重复纳入待分配托数。</p>
+        <p>同类待回库托盘按扣除预占后的可用库存统计：无可用库存的托盘不计入，包括被出库或理货出库整托预占的托盘；部分预占后仍有可用库存的托盘计为1托。</p>
+      </section>
+      <section id="storage">
+        <h2>2. 托盘类型与存放条件</h2>
+        <ul>
+          <li><strong>混托：</strong>同一托盘包含不同外部单号、供应商或 SKU。</li>
+          <li><strong>非混托：</strong>同一托盘的外部单号、供应商、SKU 均一致。</li>
+        </ul>
+        <div class="table-wrap"><table>
+          <colgroup><col style="width:22%"><col style="width:78%"></colgroup>
+          <thead><tr><th>库区</th><th>存放条件</th></tr></thead>
+          <tbody>
+            <tr><td>多板区</td><td>同一货道仅存放同一外部单号、供应商、SKU 的托盘。</td></tr>
+            <tr><td>单板区</td><td>同一货道允许存放不同物料的非混托托盘。</td></tr>
+            <tr><td>混托区</td><td>允许存放混托和非混托托盘。</td></tr>
+          </tbody>
+        </table></div>
+        <p>货道容量读取实际配置，支持未来新增进深。</p>
+      </section>
+      <section id="matching">
+        <h2>3. 共用货道匹配算法</h2>
+        <h3>混托</h3>
+        <p>仅在混托区查找：</p>
+        <ol>
+          <li>优先选择可用空货道。</li>
+          <li>无可用空货道时，选择货道可用容量最大的非空货道。</li>
+          <li>同等容量条件下，按轨道评分择优。</li>
+          <li>无可用货道时拦截，门型 LED 报错。</li>
+        </ol>
+        <h3>非混托</h3>
+        <div class="note"><strong>仅剩1托：</strong>同类待分配托盘仅剩1托时，优先分配1板区，无可用位置时再分配混托区；混托区仍无可用位置时，门型 LED 报错。</div>
+        <p>同类待分配数量大于1托时，在符合条件的多板区货道中匹配：</p>
+        <ol>
+          <li><strong>非空货道优先：</strong>先匹配已有同类托盘的非空货道，不足部分再使用空货道。</li>
+          <li><strong>逐次容量匹配：</strong>先找货道可用容量等于待分配托数的货道；无相等容量时，选择货道可用容量大于待分配托数且最小的货道；无单条货道能够容纳时，选择货道可用容量最大的货道，容纳部分托盘，再对剩余托盘重复匹配。</li>
+          <li><strong>轨道评分择优：</strong>同等容量条件下，按轨道评分选择。</li>
+        </ol>
+        <p>优先级：<strong>存放条件 → 非空优先 → 容量匹配 → 轨道评分</strong>。</p>
+      </section>
+      <section id="score">
+        <h2>4. 轨道评分</h2>
+        <p>综合搬运任务负载、空货道率和 SKU 分布评分，分数越高越优先。同等候选条件下，优先选择当前 SKU 托盘较少的轨道，使同 SKU 分散存放，支持从不同轨道出库，提高出库效率。</p>
+        <div class="formula">轨道评分＝（1－搬运任务繁忙率）× 权重A＋空货道率 × 权重B＋（1－SKU 托盘占比）× 权重C</div>
+        <div class="table-wrap"><table>
+          <colgroup><col style="width:24%"><col style="width:76%"></colgroup>
+          <thead><tr><th>指标</th><th>计算口径</th></tr></thead>
+          <tbody>
+            <tr><td>搬运任务繁忙率</td><td>轨道已分配未完成的搬入、搬出、移库搬运任务数 ÷ 轨道搬运任务负载基准。</td></tr>
+            <tr><td>空货道率</td><td>轨道候选范围内空货道数 ÷ 轨道总货道数。</td></tr>
+            <tr><td>SKU 托盘占比</td><td>该轨道当前 SKU 的托盘数 ÷ 所有可参与该 SKU 存放的轨道中该 SKU 的托盘总数。分母统计范围不随本次容量匹配后的候选轨道范围变化。托盘数包含实际在库及已规划或已分配未到位的托盘，按托盘去重；总数为0时取0。占比越低，评分越高。</td></tr>
+          </tbody>
+        </table></div>
+        <p>轨道评分用于货道匹配时同等容量候选之间的选择，以及入库投线时同组未绑定搬运任务之间的 LPN 分配。</p>
+      </section>
+      <section id="inbound">
+        <h2>5. 入库整单规划与逐托绑定</h2>
+        <h3>首次投线</h3>
+        <ol>
+          <li>RCS 扫码识别首托 LPN，发起第一段搬运任务申请；WCS 根据 LPN 获取整单组盘明细，统计本次应搬入托盘。</li>
+          <li>区分混托；非混托按同类分组。</li>
+          <li>调用共用算法，规划目标货道。</li>
+          <li>按托数预建“新建”状态的搬运任务，指定货道，暂不绑定 LPN，保存在 WCS。</li>
+          <li>预留规划容量。</li>
+        </ol>
+        <h3>逐托投线</h3>
+        <ol>
+          <li>RCS 扫码识别当前 LPN 并申请搬运任务；WCS 找到所属组尚未绑定的搬运任务。</li>
+          <li>按目标货道的最新轨道评分选择搬运任务，绑定 LPN。</li>
+          <li>满足货道锁及执行顺序后，执行已绑定 LPN 的搬运任务，并通过第一段申请响应向 RCS 返回搬运任务信息。</li>
+          <li>第二段请求时确定深度；完成反馈后更新库存位置。</li>
+        </ol>
+        <p>首托同样执行绑定流程。后续托盘沿用已有规划，最后一个 LPN 投线时绑定剩余搬运任务。</p>
+      </section>
+      <section id="return">
+        <h2>6. 其他业务逐托动态分配</h2>
+        <ol>
+          <li>RCS 通过扫码或物理按钮发起搬运任务申请，携带当前 LPN、源位置；WCS 获取托盘实际库存。</li>
+          <li>统计当前托盘及有可用库存的同类待回库托盘数量，排除入库业务托盘及无可用库存的托盘（含整托预占）。</li>
+          <li>根据最新容量、货道锁及轨道评分，调用共用算法。</li>
+          <li>仅为当前 LPN 创建“新建”状态的搬运任务，记录目标货道及容量占用，然后通过本次第一段申请响应直接返回 RCS 搬运任务。</li>
+          <li>第二段申请时确定深度，完成反馈后更新库存位置。</li>
+          <li>下一托投线时重新统计、重新匹配。</li>
+        </ol>
+      </section>
+      <section id="execution">
+        <h2>7. 容量占用与搬运执行</h2>
+        <p><strong>申请与响应：</strong>RCS 通过扫码或物理按钮申请搬运任务。入库业务绑定并执行预建搬运任务后响应；其他业务回库为当前 LPN 新建搬运任务后直接响应。响应包含任务号、LPN、母车轨道编号及货道编号。</p>
+        <div class="formula">货道可用容量＝货道配置容量－实际占用－已规划或已分配未到位占用</div>
+        <p>货道可用容量指该货道当前还能接收的托盘数量。</p>
+        <ul>
+          <li>入库预建搬运任务时预留容量，绑定 LPN 时沿用原占用。</li>
+          <li>其他回库确定当前托盘目标后，占用对应容量。</li>
+          <li>多板区同时校验已存托盘和已规划托盘的同类条件。</li>
+          <li>搬入完成后，将预留占用转为实际占用；搬运任务撤销或规划调整时同步更新。</li>
+          <li>实际执行按<a href="【OPPO】业务方案-音锋仓-货道锁-20261102v1.html">《音锋仓货道锁方案》</a>取得或接入搬入锁，同一货道逐托搬运。</li>
+          <li>已返回 RCS 的搬运任务保留目标货道。</li>
+        </ul>
+      </section>
+      <section id="examples">
+        <h2>8. 分配样例</h2>
+        <div class="table-wrap"><table>
+          <colgroup><col style="width:62%"><col style="width:38%"></colgroup>
+          <thead><tr><th>条件</th><th>匹配结果</th></tr></thead>
+          <tbody>
+            <tr><td>混托：有空货道，也有剩余2位的非空货道。</td><td>优先空货道。</td></tr>
+            <tr><td>混托：无空货道，非空货道分别剩余1、2位。</td><td>选择剩余2位的货道。</td></tr>
+            <tr><td>非混托：待分配3托，同类非空货道剩余2位，空货道容量3位。</td><td>先使用非空货道2位，再匹配剩余1托。</td></tr>
+            <tr><td>非混托：待分配5托，无可用非空货道，候选货道可用容量为3、5、6位。</td><td>选择可用容量5位的货道。</td></tr>
+            <tr><td>非混托：待分配8托，无可用非空货道，候选货道可用容量为3、4、5、6位。</td><td>先选可用容量6位的货道，剩余2托再选可用容量3位的货道。</td></tr>
+            <tr><td>同等容量的两条候选货道分属不同轨道。</td><td>选择轨道评分较高的货道。</td></tr>
+            <tr><td>同类待分配仅剩1托，1板区、混托区均无位。</td><td>拦截，门型 LED 报错。</td></tr>
+          </tbody>
+        </table></div>
+        <p>样例以候选货道满足存放、容量和锁条件为前提。</p>
+      </section>
+    </main>
+  </div>
+  <footer>OPPO WCS · 音锋仓回库策略方案 · V1</footer>
+</body>
+</html>

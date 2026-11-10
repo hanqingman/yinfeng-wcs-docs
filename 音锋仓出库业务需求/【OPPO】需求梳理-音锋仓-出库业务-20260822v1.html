@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>音锋仓出库业务方案</title>
+  <style>
+    :root {
+      --navy-950: #071f3d;
+      --navy-900: #0a2d57;
+      --blue-800: #0a4b96;
+      --blue-700: #0868d7;
+      --blue-100: #dcecff;
+      --blue-50: #f2f7ff;
+      --teal-700: #087f6f;
+      --teal-100: #dff7f1;
+      --green-700: #19723a;
+      --green-100: #e1f5e7;
+      --amber-800: #914d00;
+      --amber-100: #fff0cf;
+      --red-700: #b42318;
+      --red-100: #ffe7e5;
+      --violet-700: #6941c6;
+      --violet-100: #eee8ff;
+      --ink: #17253a;
+      --muted: #5d6b80;
+      --line: #d8e2ef;
+      --line-strong: #b9c9dd;
+      --canvas: #f3f7fb;
+      --panel: #fff;
+      --shadow: 0 14px 38px rgba(7, 31, 61, .09);
+      --radius: 17px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font: 14px/1.68 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    a { color: inherit; }
+    button, input { font: inherit; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 56px;
+      padding: 8px 24px;
+      color: #fff;
+      background: rgba(7, 31, 61, .96);
+      box-shadow: 0 4px 18px rgba(7, 31, 61, .2);
+      backdrop-filter: blur(10px);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 780; letter-spacing: .02em; }
+    .brand-mark {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.38);
+      border-radius: 9px;
+      background: rgba(255,255,255,.1);
+    }
+    .top-actions { display: flex; gap: 8px; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 35px;
+      padding: 6px 13px;
+      color: var(--ink);
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .button:hover { color: var(--blue-800); border-color: var(--blue-700); }
+    .button.ghost { color: #fff; border-color: rgba(255,255,255,.35); background: transparent; }
+    .button.ghost:hover { color: #fff; border-color: #fff; background: rgba(255,255,255,.1); }
+
+    .hero {
+      color: #fff;
+      background:
+        radial-gradient(circle at 82% 8%, rgba(35, 198, 180, .34), transparent 27%),
+        radial-gradient(circle at 18% 112%, rgba(22, 119, 255, .48), transparent 34%),
+        linear-gradient(132deg, var(--navy-950), var(--blue-800));
+    }
+    .hero-inner { max-width: 1500px; margin: 0 auto; padding: 38px 32px 42px; }
+    h1 { max-width: 980px; margin: 0; font-size: clamp(31px, 3.6vw, 48px); line-height: 1.13; letter-spacing: -.025em; }
+    .hero-lead { max-width: 1000px; margin: 15px 0 0; color: rgba(255,255,255,.84); font-size: 16px; }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+    .meta-pill { padding: 5px 10px; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; background: rgba(255,255,255,.09); font-size: 12px; }
+
+    .shell { display: grid; grid-template-columns: 242px minmax(0, 1fr); gap: 25px; max-width: 1500px; margin: 0 auto; padding: 30px 32px 72px; }
+    .side-nav { position: sticky; top: 80px; align-self: start; padding: 12px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.92); box-shadow: 0 8px 24px rgba(7,31,61,.06); }
+    .side-nav .nav-title { padding: 8px 10px 10px; color: var(--muted); font-size: 11px; font-weight: 850; letter-spacing: .12em; }
+    .side-nav a { display: block; padding: 9px 11px; color: #40516a; border-left: 3px solid transparent; border-radius: 8px; text-decoration: none; }
+    .side-nav a:hover { color: var(--blue-800); background: var(--blue-50); }
+    .side-nav a.active { color: var(--blue-800); border-left-color: var(--blue-700); background: var(--blue-50); font-weight: 780; }
+    main { min-width: 0; }
+    section { scroll-margin-top: 76px; margin-bottom: 25px; }
+    .section-card { padding: 27px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); }
+    .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+    .section-index { display: inline-flex; margin-bottom: 7px; color: var(--blue-700); font-size: 12px; font-weight: 850; letter-spacing: .12em; }
+    h2 { margin: 0; color: var(--navy-950); font-size: 26px; line-height: 1.25; }
+    h3 { margin: 0 0 10px; color: var(--navy-900); font-size: 18px; line-height: 1.35; }
+    h4 { margin: 0 0 7px; color: var(--ink); font-size: 15px; }
+    p { margin: 0 0 10px; }
+    .lead { max-width: 960px; margin-top: 7px; color: var(--muted); }
+    .muted { color: var(--muted); }
+
+    .badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 780; }
+    .badge.blue { color: var(--blue-800); background: var(--blue-100); }
+    .badge.green { color: var(--green-700); background: var(--green-100); }
+    .badge.amber { color: var(--amber-800); background: var(--amber-100); }
+    .badge.red { color: var(--red-700); background: var(--red-100); }
+    .badge.violet { color: var(--violet-700); background: var(--violet-100); }
+    .badge.teal { color: var(--teal-700); background: var(--teal-100); }
+    .badge.gray { color: #536278; background: #edf1f6; }
+    .actor { display: inline-flex; align-items: center; padding: 2px 7px; color: #fff; border-radius: 6px; font-size: 11px; font-weight: 760; }
+    .actor.fwms { background: #7048c7; }
+    .actor.wcs { background: #0868d7; }
+    .actor.rcs { background: #0b8b78; }
+    .actor.user { background: #b66500; }
+
+    .callout { margin: 14px 0; padding: 14px 16px; border-left: 4px solid var(--blue-700); border-radius: 10px; background: var(--blue-50); }
+    .callout strong { color: var(--navy-900); }
+    .callout.success { border-left-color: #239353; background: #effaf2; }
+    .callout.warn { border-left-color: #e99200; background: #fff8e8; }
+    .callout.warn strong { color: var(--amber-800); }
+    .callout.danger { border-left-color: #db3a34; background: #fff1f0; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .grid-2 > *, .grid-3 > *, .grid-4 > * { min-width: 0; }
+    .mini-card { padding: 17px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+    .mini-card.soft { background: #f8fbff; }
+    .mini-card p:last-child, .callout p:last-child { margin-bottom: 0; }
+    .key-list { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
+    .key-list li { position: relative; padding-left: 18px; }
+    .key-list li::before { position: absolute; left: 1px; top: .72em; width: 7px; height: 7px; border-radius: 50%; background: var(--blue-700); content: ""; }
+
+    .ownership { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .owner-card { position: relative; overflow: hidden; padding: 16px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+    .owner-card::before { position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--blue-700); content: ""; }
+    .owner-card.fwms::before { background: #7048c7; }
+    .owner-card.rcs::before { background: #0b8b78; }
+    .owner-card.user::before { background: #b66500; }
+
+    .table-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+    .search { min-width: min(350px, 100%); padding: 8px 11px; color: var(--ink); border: 1px solid var(--line-strong); border-radius: 9px; background: #fff; outline: none; }
+    .search:focus { border-color: var(--blue-700); box-shadow: 0 0 0 3px rgba(8,104,215,.12); }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 11px; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    th, td { padding: 10px 12px; text-align: left; vertical-align: top; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    th:last-child, td:last-child { border-right: 0; }
+    tbody tr:last-child td { border-bottom: 0; }
+    thead th { position: sticky; top: 0; z-index: 2; color: #fff; background: var(--blue-700); font-size: 12px; font-weight: 820; }
+    tbody tr:nth-child(even) { background: #f8fbff; }
+    tbody tr:hover { background: #eef6ff; }
+    .compact-table { min-width: 820px; }
+    .compact-table thead th { color: var(--navy-950); background: #eaf3ff; }
+    .point-table { min-width: 820px; }
+    .point-table th:first-child, .point-table td:first-child { width: 88px; white-space: nowrap; }
+    .point-table th:nth-child(2), .point-table td:nth-child(2) { width: 108px; }
+    .point-id { display: inline-flex; width: max-content; min-width: 48px; min-height: 30px; padding: 0 8px; align-items: center; justify-content: center; white-space: nowrap; line-height: 1; color: #fff; border-radius: 8px; background: var(--blue-700); font-weight: 850; }
+
+    .evidence-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 14px 0 20px; }
+    .evidence-card { margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: 0 7px 18px rgba(7,31,61,.06); }
+    .evidence-card img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #101820; }
+    .evidence-card figcaption { padding: 13px 15px 15px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .evidence-card figcaption strong { display: block; margin-bottom: 3px; color: var(--navy-900); font-size: 14px; }
+
+    .decision-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .decision-card { display: flex; min-height: 0; height: 100%; padding: 18px 20px 20px; flex-direction: column; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+    .decision-card.auto { border-top: 4px solid #239353; }
+    .decision-card.pda { border-top: 4px solid var(--blue-700); }
+    .decision-card h3 { margin-bottom: 4px; }
+    .decision-card p { margin: 0; line-height: 1.8; }
+    .decision-card .result { display: inline-flex; margin: 4px 0 10px; padding: 4px 8px; border-radius: 7px; font-weight: 800; }
+    .decision-card.auto .result { color: var(--green-700); background: var(--green-100); }
+    .decision-card.pda .result { color: var(--blue-800); background: var(--blue-100); }
+
+    .process-flow { margin: 20px 0 4px; }
+    .process-flow figcaption { margin-bottom: 10px; color: var(--navy-900); font-size: 17px; font-weight: 820; }
+    .process-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .process-svg { display: block; width: 100%; min-width: 1120px; height: auto; font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .process-svg .lane-body { fill: #fbfdff; stroke: #d8e2ee; }
+    .process-svg .lane-head { fill: #eaf3ff; stroke: #a9c1df; }
+    .process-svg .lane-head.fwms { fill: #f0eaff; }
+    .process-svg .lane-head.rcs { fill: #e7f8f4; }
+    .process-svg .lane-head.pda { fill: #fff3df; }
+    .process-svg .lane-label { fill: #132b48; font-size: 18px; font-weight: 850; text-anchor: middle; }
+    .process-svg .node { fill: #fff; stroke: #7893b0; stroke-width: 1.5; }
+    .process-svg .node.fwms { fill: #f8f5ff; stroke: #7048c7; }
+    .process-svg .node.wcs { fill: #f1f7ff; stroke: #0868d7; }
+    .process-svg .node.rcs { fill: #effbf8; stroke: #0b8b78; }
+    .process-svg .node.pda { fill: #fff8eb; stroke: #b66500; }
+    .process-svg .node.end { fill: #eaf8ef; stroke: #239353; }
+    .process-svg .decision { fill: #fff; stroke: #0868d7; stroke-width: 1.7; }
+    .process-svg .node-text { fill: #172b45; font-size: 14px; font-weight: 700; text-anchor: middle; }
+    .process-svg .node-sub { fill: #52657c; font-size: 12px; font-weight: 500; }
+    .process-svg .connector { fill: none; stroke: #51677f; stroke-width: 2; marker-end: url(#process-arrow); }
+    .process-svg .branch-label { fill: #0868d7; font-size: 12px; font-weight: 800; }
+    .process-note { margin: 10px 2px 0; color: var(--muted); font-size: 12px; }
+
+    details.scenario { margin-bottom: 12px; overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+    details.scenario[open] { border-color: #b7d0ef; box-shadow: 0 7px 20px rgba(7,31,61,.06); }
+    details.scenario summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; cursor: pointer; list-style: none; }
+    details.scenario summary::-webkit-details-marker { display: none; }
+    details.scenario summary::after { color: var(--blue-700); font-size: 18px; font-weight: 850; content: "+"; }
+    details.scenario[open] summary::after { content: "−"; }
+    .scenario-name { display: flex; align-items: center; gap: 10px; font-weight: 820; }
+    .scenario-body { padding: 16px 18px 18px; border-top: 1px solid var(--line); }
+
+    .pending-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .pending-item { padding: 15px; border: 1px solid #efc16f; border-radius: 12px; background: #fff9ee; }
+    .pending-item h4 { color: var(--amber-800); }
+
+    .footer { padding: 28px 32px 42px; color: #77859a; text-align: center; }
+    code { padding: 1px 5px; color: #173f6f; border-radius: 5px; background: #edf5ff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; }
+
+    @media (max-width: 1160px) {
+      .shell { grid-template-columns: 1fr; }
+      .side-nav { position: static; display: flex; gap: 4px; overflow-x: auto; }
+      .side-nav .nav-title { display: none; }
+      .side-nav a { white-space: nowrap; border-left: 0; border-bottom: 3px solid transparent; }
+      .side-nav a.active { border-bottom-color: var(--blue-700); }
+      .ownership, .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .topbar { padding-inline: 14px; }
+      .brand span:last-child { display: none; }
+      .hero-inner, .shell { padding-left: 16px; padding-right: 16px; }
+      .grid-2, .grid-3, .grid-4, .ownership, .pending-grid, .evidence-grid, .decision-grid { grid-template-columns: 1fr; }
+      .section-card { padding: 18px; border-radius: 13px; }
+    }
+    @media print {
+      @page { size: A4 landscape; margin: 10mm; }
+      body { background: #fff; font-size: 10px; }
+      .topbar, .side-nav, .table-toolbar { display: none !important; }
+      .hero { color: #111; background: #fff; border-bottom: 2px solid var(--blue-800); }
+      .hero-inner { max-width: none; padding: 0 0 7mm; }
+      .hero-lead { color: #444; }
+      .meta-pill { border-color: #aaa; background: #fff; }
+      .shell { display: block; max-width: none; padding: 7mm 0 0; }
+      .section-card { padding: 0; border: 0; box-shadow: none; }
+      section { break-inside: auto; margin-bottom: 8mm; }
+      h2, h3 { break-after: avoid; }
+      .mini-card, .owner-card, .decision-card, details.scenario { break-inside: avoid; }
+      .table-wrap, .process-scroll, .decision-grid { overflow: visible; }
+      .decision-grid { grid-template-columns: repeat(2, 1fr); }
+      .process-svg { min-width: 0; }
+      thead th { position: static; color: #fff !important; background: var(--blue-700) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      details.scenario .scenario-body { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">W</span><span>OPPO WCS · 音锋仓</span></div>
+    <div class="top-actions">
+      <button class="button ghost" type="button" onclick="window.print()">打印 / 导出 PDF</button>
+    </div>
+  </header>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>音锋仓出库业务方案</h1>
+      <p class="hero-lead">覆盖出库单处理、库存预占、下架搬运、拣货回传及余料 / 空托收尾。</p>
+      <div class="meta-row">
+        <span class="meta-pill">版本：20260822 v1</span>
+        <span class="meta-pill">范围：自动化库出库</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="side-nav" aria-label="页面目录">
+      <div class="nav-title">CONTENTS</div>
+      <a href="#scope">01 业务范围与系统职责</a>
+      <a href="#points">02 出库口与点位</a>
+      <a href="#flow">03 出库主流程</a>
+      <a href="#order">04 自动拆单、自动接单、合单预占、合单拣货</a>
+      <a href="#strategy">05 预占、下架与多进深清障</a>
+      <a href="#special">06 拣货作业与 LED</a>
+      <a href="#return">07 回库策略</a>
+      <a href="#interface">08 接口与数据</a>
+      <a href="#acceptance">09 待确认项</a>
+    </nav>
+
+    <main>
+      <section id="scope">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="section-index">SECTION 01</span>
+              <h2>业务范围与系统职责</h2>
+              <p class="lead">适用于音锋自动化库出库，以及与出库闭环有关的余料回库、空托入库、清障和回库上架搬运。本方案不展开正常入库、理货、盘点、隔离筛选和质检还料流程；上述业务产生的回库复用第 7 节回库策略。</p>
+            </div>
+          </div>
+
+
+          <h3 id="boundary" style="margin-top:20px">系统边界与责任</h3>
+          <div class="ownership">
+            <article class="owner-card fwms">
+              <h3><span class="actor fwms">FWMS</span> 上游业务</h3>
+              <ul class="key-list">
+                <li>查询、分配、发放及取消出库单。</li>
+                <li>出库单查询字段：生产领料的外部单号 1 为申请单号；品检退料单的外部单号 2 为发运单号；部门领料单的外部单号 1 为 MO 文件编号。</li>
+                <li>下发允许短拣标识。</li>
+                <li>提供 UPN 拆分、标签打印服务。</li>
+                <li>接收实际拣货结果并完成最终发货。</li>
+              </ul>
+            </article>
+            <article class="owner-card">
+              <h3><span class="actor wcs">WCS</span> 业务中控</h3>
+              <ul class="key-list">
+                <li>管理出库单拆分、接单、合单和工作台分配。</li>
+                <li>预占库存、判定拣货方式，生成下架任务和搬运任务。</li>
+                <li>管理货道锁、清障移库及搬运任务串行。</li>
+                <li>主动下发出库搬运任务；响应 RCS 两段入库 / 回库请求，第一段返回母车轨道及货道，第二段返回货道及深度，接收完成反馈后更新库存与任务。</li>
+                <li>校验 PDA 扫码，扣减库存并记录实拣结果。</li>
+                <li>按执行、到口和成功扫码事件请求 RCS 更新 LED；托盘离口后停止交互。</li>
+                <li>出库单完成拣货后，向 FWMS 回传实拣结果。</li>
+              </ul>
+            </article>
+            <article class="owner-card rcs">
+              <h3><span class="actor rcs">RCS</span> 设备执行</h3>
+              <ul class="key-list">
+                <li>执行 LPN 搬运及子母车、提升机、输送线路径控制。</li>
+                <li>余料托盘或空托到达 263 入口后，按识别的托盘LPN请求 WCS 获取搬运任务。</li>
+                <li>按 WCS 搬运任务指定的目标货道执行输送和母车搬运。</li>
+                <li>到达母车轨道接货点后请求第二段；到达指定货道深度后，通过“托盘搬运任务执行完成反馈”返回第一段任务号、LPN、货道编号和深度，WCS 据此更新库存与搬运任务，不再按到达时间排序推算深度。</li>
+                <li>按 WCS 请求展示或刷新 LED。</li>
+                <li>执行空托改向、红外识别、叠盘及输送，点位规则见第 2 节。</li>
+              </ul>
+            </article>
+            <article class="owner-card user">
+              <h3><span class="actor user">PDA助手</span> 现场协同</h3>
+              <ul class="key-list">
+                <li>在【PDA - 拣货出库】扫描 UPN 并执行拣货。</li>
+                <li>UPN 拆分、标签打印和现场短拣确认。</li>
+                <li>1 / 2 / 3 号口有余料时，叉运底托至 4 号口回库；无余料时移除中间木托。</li>
+                <li>叠盘满后在 283 执行【PDA - 空容器入库】，再叉运至 263 入库。</li>
+              </ul>
+            </article>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="points">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="section-index">SECTION 02</span>
+              <h2>六个出库口与设备点位</h2>
+              <p class="lead">1～6 号工作台均支持整托直出和PDA拣货；各口点位及余料、空托处理路径如下。</p>
+            </div>
+          </div>
+
+          <div class="callout">
+            <strong>托盘结构：</strong>底层为带托盘LPN的底托，中间木托承载物料。有余料时连底托回库；无余料时先移除中间木托，再识别和输送空底托。
+          </div>
+
+          <div class="table-wrap">
+            <table class="point-table" data-search-table>
+              <thead>
+                <tr>
+                  <th>业务口</th>
+                  <th>设备点位</th>
+                  <th>作业与拣货能力</th>
+                  <th>余料回库</th>
+                  <th>空托处理</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="point-id">1号</span></td>
+                  <td><strong>281</strong></td>
+                  <td>标准出库口；<span class="badge blue">支持整托直出和PDA拣货</span></td>
+                  <td>有余料时由叉车叉底托投 4 号口（263）回库</td>
+                  <td>移除中间木托 → 红外识别底托为空托 → 自动送叠盘机</td>
+                </tr>
+                <tr>
+                  <td><span class="point-id">2号</span></td>
+                  <td><strong>282</strong></td>
+                  <td>标准出库口；<span class="badge blue">支持整托直出和PDA拣货</span></td>
+                  <td>有余料时由叉车叉底托投 4 号口（263）回库</td>
+                  <td>移除中间木托 → 红外识别底托为空托 → 自动送叠盘机</td>
+                </tr>
+                <tr>
+                  <td><span class="point-id">3号</span></td>
+                  <td><strong>283</strong></td>
+                  <td>出库口；<span class="badge blue">支持整托直出和PDA拣货</span>；承接 5 / 6 号口空托及叠满托盘</td>
+                  <td>有余料时由叉车叉底托投 4 号口（263）回库</td>
+                  <td>红外识别后自动送叠盘机；当前无线外投放空托场景</td>
+                </tr>
+                <tr>
+                  <td><span class="point-id">4号</span></td>
+                  <td><strong>263</strong>（兼作入库口）</td>
+                  <td>出库口；<span class="badge blue">支持整托直出和PDA拣货</span>；兼作余料、叠满托盘入库口</td>
+                  <td>本口即 263 回库 / 入库口，余料直接转入回库流程</td>
+                  <td>不承担红外识别；空托由现场转入既有空托入库链路</td>
+                </tr>
+                <tr>
+                  <td><span class="point-id">5号</span></td>
+                  <td><strong>260</strong></td>
+                  <td>标准出库口；<span class="badge blue">支持整托直出和PDA拣货</span></td>
+                  <td>托盘仍在位时可按物理回库按钮</td>
+                  <td>【PDA - 搬运至其他出库口】送 3 号口 → RCS 反馈搬出 / 到达 → 红外识别 → 自动送叠盘机</td>
+                </tr>
+                <tr>
+                  <td><span class="point-id">6号</span></td>
+                  <td><strong>259</strong></td>
+                  <td>标准出库口；<span class="badge blue">支持整托直出和PDA拣货</span></td>
+                  <td>托盘仍在位时可按物理回库按钮</td>
+                  <td>【PDA - 搬运至其他出库口】送 3 号口 → RCS 反馈搬出 / 到达 → 红外识别 → 自动送叠盘机</td>
+                </tr>
+                <tr>
+                  <td><span class="point-id">叠盘机</span></td>
+                  <td>设备本体</td>
+                  <td>接收经 1 / 2 / 3 号口红外识别为空托的底托，自动叠盘；叠满后自动输送至 283；<span class="badge gray">不涉及拣货</span></td>
+                  <td>不接收有料托盘</td>
+                  <td>空底托叠盘 → 叠满后送 283 →【PDA - 空容器入库】→ 叉车转 263 入库</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout">
+            <strong>设备反馈：</strong>输送线搬运由 RCS-12 反馈 status=1（搬出成功）、status=2（到达）；红外识别、叠盘机叠满等设备状态不作为搬运完成反馈参数。
+          </div>
+
+        </div>
+      </section>
+
+      <section id="flow">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="section-index">SECTION 03</span>
+              <h2>出库主流程</h2>
+              <p class="lead">单据准备 → 预占与搬运 → 到口拣货 → 实拣回传 → 余料回库或空托入库。出库单完成拣货即回传，FWMS 后续发货不等待余料、空托处理完成。</p>
+            </div>
+          </div>
+
+          <div class="callout success">
+            <strong>主流程：</strong>FWMS 发放 → WCS 按配置拆单 → 未来自动接单每 5 分钟按合单预占规则处理并执行，或人工接单 / 合单后先【指定工作台】再【执行】 → 按订单实际需求预占 → 结合整托及合单拣货策略判定自动 / PDA 拣货方式 → 生成任务 → 清障、下架与搬运 → 到口执行已确定的方式 → 记录并回传实拣结果 → 余料 / 空托收尾。LED 在执行、到口及成功扫描 UPN 时更新，托盘离口后停止交互。
+          </div>
+
+          <figure class="process-flow">
+            <figcaption>出库主流程图</figcaption>
+            <div class="process-scroll">
+              <svg class="process-svg" viewBox="0 0 1600 3385" role="img" aria-labelledby="outboundFlowTitle outboundFlowDesc">
+                <title id="outboundFlowTitle">音锋仓出库主流程图</title>
+                <desc id="outboundFlowDesc">按 FWMS、WCS中台、厂商RCS、PDA助手与现场四条泳道展示出库单、接单合单、预占清障、下架搬运、拣货、余料回库、空托入库及完成回传。</desc>
+                <defs>
+                  <marker id="process-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#51677f"></path>
+                  </marker>
+                </defs>
+
+                <rect class="lane-body" x="0" y="80" width="320" height="3305"></rect>
+                <rect class="lane-body" x="320" y="80" width="640" height="3305"></rect>
+                <rect class="lane-body" x="960" y="80" width="320" height="3305"></rect>
+                <rect class="lane-body" x="1280" y="80" width="320" height="3305"></rect>
+                <rect class="lane-head fwms" x="0" y="0" width="320" height="80"></rect>
+                <rect class="lane-head" x="320" y="0" width="640" height="80"></rect>
+                <rect class="lane-head rcs" x="960" y="0" width="320" height="80"></rect>
+                <rect class="lane-head pda" x="1280" y="0" width="320" height="80"></rect>
+                <text class="lane-label" x="160" y="49">FWMS</text>
+                <text class="lane-label" x="640" y="49">WCS中台</text>
+                <text class="lane-label" x="1120" y="49">厂商RCS</text>
+                <text class="lane-label" x="1440" y="49">PDA助手 / 现场</text>
+
+                <rect class="node fwms" x="80" y="110" width="160" height="52" rx="26"></rect>
+                <text class="node-text" x="160" y="142">开始</text>
+
+                <rect class="node fwms" x="45" y="200" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="160" y="232">发放出库单<tspan class="node-sub" x="160" dy="21">下发单头、明细、交货地（客户/拉线）</tspan><tspan class="node-sub" x="160" dy="19">及短拣权限、指定 UPN</tspan></text>
+
+                <rect class="node wcs" x="365" y="200" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="480" y="232">接收并校验出库单<tspan class="node-sub" x="480" dy="21">校验必填字段、重复单</tspan><tspan class="node-sub" x="480" dy="19">和业务标识</tspan></text>
+
+                <rect class="node wcs" x="365" y="320" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="480" y="352">按配置拆单<tspan class="node-sub" x="480" dy="22">生成一个或多个 WCS 出库单</tspan></text>
+
+                <polygon class="decision" points="480,420 590,480 480,540 370,480"></polygon>
+                <text class="node-text" x="480" y="474">命中自动接单策略？<tspan class="node-sub" x="480" dy="20">指定出库单据类型 + 优先级</tspan></text>
+
+                <rect class="node wcs" x="365" y="575" width="230" height="90" rx="10"></rect>
+                <text class="node-text" x="480" y="606">自动处理（未来方案）<tspan class="node-sub" x="480" dy="21">每 5 分钟按合单预占规则处理</tspan><tspan class="node-sub" x="480" dy="19">下架策略匹配目标工作台并执行</tspan></text>
+
+                <rect class="node wcs" x="685" y="575" width="230" height="90" rx="10"></rect>
+                <text class="node-text" x="800" y="606">人工接单 / 合单<tspan class="node-sub" x="800" dy="21">【WCS - 出库单据】操作</tspan><tspan class="node-sub" x="800" dy="19">选择待执行单据</tspan></text>
+
+                <rect class="node wcs" x="365" y="710" width="230" height="96" rx="10"></rect>
+                <text class="node-text" x="480" y="741">进入执行处理<tspan class="node-sub" x="480" dy="21">自动：定时器触发</tspan><tspan class="node-sub" x="480" dy="19">人工：先【指定工作台】再【执行】</tspan></text>
+
+                <rect class="node wcs" x="685" y="710" width="230" height="96" rx="10"></rect>
+                <text class="node-text" x="800" y="741">请求 LED 预展示<tspan class="node-sub" x="800" dy="21">单据已执行、托盘未到口</tspan><tspan class="node-sub" x="800" dy="19">Vendor、SO、SKU、Qty、Plt</tspan></text>
+
+                <rect class="node rcs" x="1005" y="710" width="230" height="96" rx="10"></rect>
+                <text class="node-text" x="1120" y="741">LED 展示基础信息<tspan class="node-sub" x="1120" dy="21">按已分配工作台展示</tspan><tspan class="node-sub" x="1120" dy="19">等待托盘到口</tspan></text>
+
+                <rect class="node wcs" x="365" y="845" width="230" height="96" rx="10"></rect>
+                <text class="node-text" x="480" y="876">按实际需求预占并判定<tspan class="node-sub" x="480" dy="21">结合整托及合单拣货策略</tspan><tspan class="node-sub" x="480" dy="19">生成下架、搬运任务并锁定货道</tspan></text>
+
+                <polygon class="decision" points="480,975 590,1035 480,1095 370,1035"></polygon>
+                <text class="node-text" x="480" y="1029">需要先清障？<tspan class="node-sub" x="480" dy="20">目标托外侧是否有阻挡托</tspan></text>
+
+                <rect class="node wcs" x="365" y="1135" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="480" y="1167">下发阻挡托移库任务<tspan class="node-sub" x="480" dy="21">混托区、单托区按需逐托移出</tspan><tspan class="node-sub" x="480" dy="19">多板区整托只移一托外侧尾托</tspan></text>
+
+                <rect class="node rcs" x="1005" y="1135" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="1120" y="1167">执行外侧托盘移库并回传<tspan class="node-sub" x="1120" dy="22">目标货道、目标深度 · RCS-08</tspan></text>
+
+                <rect class="node wcs" x="685" y="1260" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="800" y="1292">接收并记录实际位置<tspan class="node-sub" x="800" dy="22">完成外侧托盘移库子流程</tspan></text>
+
+                <rect class="node wcs" x="365" y="1260" width="230" height="96" rx="10"></rect>
+                <text class="node-text" x="480" y="1291">下发目标托搬运任务<tspan class="node-sub" x="480" dy="22">LPN、货道、深度、目的地、优先级</tspan></text>
+
+                <rect class="node rcs" x="1005" y="1260" width="230" height="96" rx="10"></rect>
+                <text class="node-text" x="1120" y="1291">下架并搬运至出库口<tspan class="node-sub" x="1120" dy="21">到母车卸货点：status=1 搬出成功</tspan><tspan class="node-sub" x="1120" dy="19">按 WCS 任务严格串行执行</tspan></text>
+
+                <rect class="node rcs" x="1005" y="1385" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="1120" y="1417">回传出库口到达<tspan class="node-sub" x="1120" dy="22">任务号、LPN、status=2 · RCS-06</tspan></text>
+
+                <rect class="node wcs" x="685" y="1490" width="230" height="90" rx="10"></rect>
+                <text class="node-text" x="800" y="1521">请求更新到口信息<tspan class="node-sub" x="800" dy="21">触发：托盘到达任一出库口</tspan><tspan class="node-sub" x="800" dy="19">补充托盘字段及拣货标识</tspan></text>
+
+                <rect class="node rcs" x="1005" y="1490" width="230" height="90" rx="10"></rect>
+                <text class="node-text" x="1120" y="1521">LED 更新到口信息<tspan class="node-sub" x="1120" dy="21">保留基础字段并补充托盘信息</tspan><tspan class="node-sub" x="1120" dy="19">NoPick / NeedToPick</tspan></text>
+
+                <polygon class="decision" points="480,1496 590,1556 480,1616 370,1556"></polygon>
+                <text class="node-text" x="480" y="1542">预占判定结果？<tspan class="node-sub" x="480" dy="20">策略范围内订单可汇总判断整托</tspan><tspan class="node-sub" x="480" dy="18">到口后按已确定方式执行</tspan></text>
+
+                <rect class="node wcs" x="365" y="1655" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="480" y="1687">自动拣货<tspan class="node-sub" x="480" dy="22">自动关联 LPN、UPN 与订单</tspan></text>
+
+                <rect class="node pda" x="1325" y="1655" width="230" height="96" rx="10"></rect>
+                <text class="node-text" x="1440" y="1686">【PDA - 拣货出库】<tspan class="node-sub" x="1440" dy="21">按下架任务顺序扫描 UPN</tspan><tspan class="node-sub" x="1440" dy="19">必要时拆分、打印及确认短拣</tspan></text>
+
+                <rect class="node wcs" x="685" y="1790" width="230" height="100" rx="10"></rect>
+                <text class="node-text" x="800" y="1819">UPN 扫码成功请求更新 LED<tspan class="node-sub" x="800" dy="21">成功扫描 1 个 UPN 触发 1 次</tspan><tspan class="node-sub" x="800" dy="19">托盘离口后不再调用</tspan></text>
+
+                <rect class="node rcs" x="1005" y="1790" width="230" height="100" rx="10"></rect>
+                <text class="node-text" x="1120" y="1819">刷新 LED 拣货信息<tspan class="node-sub" x="1120" dy="21">QTY 累计已拣数量增加</tspan><tspan class="node-sub" x="1120" dy="19">LPNQTY / PICK 实时扣减</tspan></text>
+
+                <rect class="node wcs" x="365" y="1925" width="230" height="90" rx="10"></rect>
+                <text class="node-text" x="480" y="1956">记录实拣结果<tspan class="node-sub" x="480" dy="21">更新实际 UPN、数量和差异</tspan><tspan class="node-sub" x="480" dy="19">出库单完成拣货时回传 FWMS</tspan></text>
+
+                <rect class="node fwms" x="45" y="1925" width="230" height="100" rx="10"></rect>
+                <text class="node-text" x="160" y="1954">接收出库单实拣结果<tspan class="node-sub" x="160" dy="21">实际 UPN、实拣数量</tspan><tspan class="node-sub" x="160" dy="19">短拣结果和完成状态</tspan></text>
+
+                <polygon class="decision" points="480,2040 590,2100 480,2160 370,2100"></polygon>
+                <text class="node-text" x="480" y="2094">托盘有余料？<tspan class="node-sub" x="480" dy="20">分流处理回库或空托</tspan></text>
+
+                <rect class="node pda" x="1325" y="2200" width="230" height="110" rx="10"></rect>
+                <text class="node-text" x="1440" y="2229">余料回库现场操作<tspan class="node-sub" x="1440" dy="21">1 / 2 / 3 号口：叉车投 4 号口（263）</tspan><tspan class="node-sub" x="1440" dy="19">5 / 6 号口：按物理回库按钮</tspan><tspan class="node-sub" x="1440" dy="19">托盘进入回库输送线</tspan></text>
+
+                <rect class="node pda" x="1325" y="2345" width="230" height="100" rx="10"></rect>
+                <text class="node-text" x="1440" y="2374">空托现场操作<tspan class="node-sub" x="1440" dy="21">1 / 2 / 3 号口：移除中间木托</tspan><tspan class="node-sub" x="1440" dy="19">5 / 6 号口：PDA 搬运至 3 号口</tspan></text>
+
+                <rect class="node rcs" x="1005" y="2345" width="230" height="110" rx="10"></rect>
+                <text class="node-text" x="1120" y="2374">空托识别与叠盘<tspan class="node-sub" x="1120" dy="21">5 / 6 号口空托自动搬至 3 号口</tspan><tspan class="node-sub" x="1120" dy="19">1 / 2 / 3 号口红外识别后送叠盘机</tspan><tspan class="node-sub" x="1120" dy="19">叠满后自动输送至 283</tspan></text>
+
+                <rect class="node pda" x="1325" y="2490" width="230" height="100" rx="10"></rect>
+                <text class="node-text" x="1440" y="2519">叠满托盘入库<tspan class="node-sub" x="1440" dy="21">283 执行【PDA - 空容器入库】</tspan><tspan class="node-sub" x="1440" dy="19">叉车转入库口 263</tspan></text>
+
+                <rect class="node rcs" x="1005" y="2630" width="230" height="90" rx="10"></rect>
+                <text class="node-text" x="1120" y="2661">请求入库 / 回库第一段<tspan class="node-sub" x="1120" dy="21">源位置、托盘LPN</tspan><tspan class="node-sub" x="1120" dy="19">RCS 请求 WCS 获取任务</tspan></text>
+
+                <rect class="node wcs" x="685" y="2750" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="800" y="2782">返回第一段搬运任务<tspan class="node-sub" x="800" dy="22">任务号、LPN、母车轨道、货道</tspan></text>
+
+                <rect class="node rcs" x="1005" y="2875" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="1120" y="2900">到母车轨道接货点请求第二段<tspan class="node-sub" x="1120" dy="20">第一段任务号、LPN</tspan><tspan class="node-sub" x="1120" dy="19">源位置：母车轨道接货点</tspan></text>
+
+                <rect class="node wcs" x="685" y="2875" width="230" height="82" rx="10"></rect>
+                <text class="node-text" x="800" y="2900">返回第二段目标<tspan class="node-sub" x="800" dy="20">第一段任务号、LPN</tspan><tspan class="node-sub" x="800" dy="19">货道编号、深度（1～6）</tspan></text>
+
+                <rect class="node rcs" x="1005" y="3000" width="230" height="90" rx="10"></rect>
+                <text class="node-text" x="1120" y="3031">到指定深度并反馈完成<tspan class="node-sub" x="1120" dy="21">第一段任务号、LPN、货道、深度</tspan><tspan class="node-sub" x="1120" dy="19">WCS 返回失败时重新反馈</tspan></text>
+
+                <rect class="node wcs" x="685" y="3000" width="230" height="90" rx="10"></rect>
+                <text class="node-text" x="800" y="3031">记录实际货道与深度<tspan class="node-sub" x="800" dy="21">按第一段任务号幂等处理</tspan><tspan class="node-sub" x="800" dy="19">返回成功 / 失败</tspan></text>
+
+                <rect class="node wcs" x="685" y="3135" width="230" height="96" rx="10"></rect>
+                <text class="node-text" x="800" y="3166">完成出库业务闭环<tspan class="node-sub" x="800" dy="21">更新库存、单据和任务状态</tspan><tspan class="node-sub" x="800" dy="19">释放货道锁</tspan></text>
+
+                <rect class="node end" x="720" y="3270" width="160" height="52" rx="26"></rect>
+                <text class="node-text" x="800" y="3302">结束</text>
+
+                <path class="connector" d="M160 162 L160 200"></path>
+                <path class="connector" d="M275 241 L365 241"></path>
+                <path class="connector" d="M480 282 L480 320"></path>
+                <path class="connector" d="M480 402 L480 420"></path>
+                <path class="connector" d="M480 540 L480 575"></path>
+                <path class="connector" d="M590 480 L800 480 L800 575"></path>
+                <text class="branch-label" x="496" y="564">自动</text>
+                <text class="branch-label" x="610" y="467">人工</text>
+                <path class="connector" d="M480 665 L480 710"></path>
+                <path class="connector" d="M800 665 L800 690 L630 690 L630 758 L595 758"></path>
+                <path class="connector" d="M595 893 L650 893 L650 758 L685 758"></path>
+                <path class="connector" d="M915 758 L1005 758"></path>
+                <path class="connector" d="M480 806 L480 845"></path>
+                <path class="connector" d="M480 941 L480 975"></path>
+                <path class="connector" d="M480 1095 L480 1135"></path>
+                <path class="connector" d="M370 1035 L340 1035 L340 1308 L365 1308"></path>
+                <path class="connector" d="M595 1176 L1005 1176"></path>
+                <path class="connector" d="M1120 1217 L1120 1235 L800 1235 L800 1260"></path>
+                <text class="branch-label" x="495" y="1120">是</text>
+                <text class="branch-label" x="345" y="1022">否</text>
+                <path class="connector" d="M480 1356 L480 1372 L960 1372 L960 1335 L1005 1335"></path>
+                <path class="connector" d="M1120 1356 L1120 1385"></path>
+                <path class="connector" d="M1005 1426 L640 1426 L640 1478 L480 1478 L480 1496"></path>
+                <path class="connector" d="M1120 1467 L1120 1478 L800 1478 L800 1490"></path>
+                <path class="connector" d="M915 1535 L1005 1535"></path>
+                <path class="connector" d="M480 1616 L480 1655"></path>
+                <path class="connector" d="M590 1556 L620 1556 L620 1605 L1440 1605 L1440 1655"></path>
+                <text class="branch-label" x="495" y="1641">自动</text>
+                <text class="branch-label" x="610" y="1543">PDA</text>
+                <path class="connector" d="M1440 1751 L1440 1770 L800 1770 L800 1790"></path>
+                <path class="connector" d="M915 1840 L1005 1840"></path>
+                <path class="connector" d="M480 1737 L480 1925"></path>
+                <path class="connector" d="M1555 1703 L1580 1703 L1580 1970 L595 1970"></path>
+                <path class="connector" d="M365 1970 L275 1970"></path>
+                <path class="connector" d="M480 2015 L480 2040"></path>
+                <path class="connector" d="M590 2100 L1440 2100 L1440 2200"></path>
+                <path class="connector" d="M480 2160 L480 2325 L1570 2325 L1570 2395 L1555 2395"></path>
+                <text class="branch-label" x="610" y="2087">有余料</text>
+                <text class="branch-label" x="495" y="2187">无余料</text>
+                <path class="connector" d="M1325 2395 L1235 2395"></path>
+                <path class="connector" d="M1120 2455 L1120 2470 L1440 2470 L1440 2490"></path>
+                <path class="connector" d="M1325 2540 L1260 2540 L1260 2255 L1325 2255"></path>
+                <path class="connector" d="M1555 2255 L1590 2255 L1590 2675 L1235 2675"></path>
+                <path class="connector" d="M1120 2720 L1120 2735 L800 2735 L800 2750"></path>
+                <path class="connector" d="M800 2832 L800 2853 L1120 2853 L1120 2875"></path>
+                <path class="connector" d="M1005 2916 H915"></path>
+                <path class="connector" d="M800 2957 V2978 H1120 V3000"></path>
+                <path class="connector" d="M1005 3045 L915 3045"></path>
+                <path class="connector" d="M800 3090 L800 3135"></path>
+                <path class="connector" d="M800 3231 L800 3270"></path>
+              </svg>
+            </div>
+
+          </figure>
+
+        </div>
+      </section>
+
+      <section id="order">
+        <div class="section-card">
+          <div class="section-head"><div><span class="section-index">SECTION 04</span><h2>自动拆单、自动接单、合单预占、合单拣货</h2></div></div>
+
+          <h3>4.1 自动拆单</h3>
+          <p><strong>业务场景：</strong>FWMS 出库单明细行超过配置上限，需要拆成多个 WCS 出库单执行。</p>
+          <div class="table-wrap"><table class="compact-table">
+            <thead><tr><th>规则项</th><th>功能与规则</th></tr></thead>
+            <tbody>
+              <tr><td>触发与配置</td><td>FWMS 出库单同步校验成功后，按“仓库 + 出库单据类型”匹配自动拆单配置；单据最大明细行数为 1～99 的正整数。</td></tr>
+              <tr><td>拆分方式</td><td>超过上限时按物料明细行拆分，不拆分单条明细行数量；保留原单号、拆单序号和明细归属。</td></tr>
+              <tr><td>不拆分条件</td><td>未匹配配置时不触发自动拆单；匹配配置但未超过上限时保留一个 WCS 出库单。</td></tr>
+              <tr><td>后续处理</td><td>生成的 WCS 出库单进入接单及合单预占处理。</td></tr>
+            </tbody>
+          </table></div>
+
+          <h3 style="margin-top:24px">4.2 自动接单</h3>
+          <p><strong>业务场景：</strong>新建出库单按类型和优先级定时处理，减少仓管员逐单执行。每 5 分钟批量处理为未来建设能力。</p>
+          <div class="table-wrap"><table class="compact-table">
+            <thead><tr><th>规则项</th><th>功能与规则</th></tr></thead>
+            <tbody>
+              <tr><td>策略与对象</td><td>【自动接单策略】配置指定出库单据类型和优先级；检测完成拆单判断后的新建 WCS 出库单。</td></tr>
+              <tr><td>定时执行</td><td>每 5 分钟处理本窗口内的新建订单：先按合单预占条件组成合并组，不满足合单条件的订单独立执行。</td></tr>
+              <tr><td>目标工作台</td><td>匹配【WCS - 策略管理 - 下架策略】确定目标工作台并分发。</td></tr>
+              <tr><td>执行结果</td><td>与【WCS - 出库单据 - 执行】一致：按实际需求预占库存，确定拣货方式，生成下架任务和搬运任务。</td></tr>
+              <tr><td>未命中与防重复</td><td>未命中自动接单策略的订单保持新建状态；已成功执行的订单不得因重复扫描再次预占或建任务。</td></tr>
+            </tbody>
+          </table></div>
+          <div class="callout"><strong>人工操作：</strong>在【WCS - 出库单据 / 出库明细】接单或合单；仓管员在【WCS - 出库单据】先点击【指定工作台】分配 1～6 号工作台，再点击【执行】预占库存并生成下架任务、搬运任务。</div>
+
+          <h3 style="margin-top:24px">4.3 合单预占</h3>
+          <p><strong>业务场景：</strong>SKD 产线属于生产领料类单据，同一交货地（客户/拉线）、同一物料代码的散单高频出现。符合条件的订单共同预占库存，减少重复下架和回库。</p>
+          <div class="table-wrap"><table class="compact-table">
+            <thead><tr><th>规则项</th><th>功能与规则</th></tr></thead>
+              <tbody>
+                <tr><td>合单条件</td><td>订单类型、交货地（客户/拉线）、物料代码、MAPPING 一致。MAPPING 关系对照表一般已包含外部单号、供应商等属性。</td></tr>
+                <tr><td>汇总与分配</td><td>将多个出库单中满足合单条件的明细行汇总需求数量，再按汇总需求数量统一分配库存；不满足合单条件的明细行不纳入该合并组。</td></tr>
+                <tr><td>自动合单</td><td>自动接单时处理同一 5 分钟窗口的候选订单；后续窗口新单不加入已完成预占的旧合并组。</td></tr>
+              <tr><td>手动合单</td><td>在【WCS - 出库单据 / 出库明细】选择多个单据，校验通过后生成合并组；在【WCS - 出库单据】先【指定工作台】再【执行】。</td></tr>
+              <tr><td>条件不一致</td><td>按合单条件对明细行分组，条件不同的明细行分别处理，不合并、不提示；满足相同条件的明细行仍可合单预占。</td></tr>
+              <tr><td>库存不足处理</td><td>与普通订单一致，执行失败并报错，不生成有效下架、搬运任务，不能自动转为短拣。</td></tr>
+              <tr><td>单据与结果归属</td><td>仅生成合并组号，不生成新的出库单。每个 UPN、预占量和实拣量归属原 FWMS 订单明细。</td></tr>
+            </tbody>
+          </table></div>
+
+          <h3 style="margin-top:24px">4.4 合单拣货策略</h3>
+          <p><strong>业务场景：</strong>当前容器除当前搬运任务识别的订单外，还关联其他订单的下架任务；或后续订单预占剩余库存后共同覆盖整托。</p>
+          <div class="callout"><strong>策略入口：</strong>【WCS - 策略管理 - 合单拣货策略】，按订单类型 + 交货地（客户/拉线）+ 货位编号匹配。</div>
+          <div class="table-wrap"><table class="compact-table">
+            <thead><tr><th>策略状态</th><th>拣货范围与顺序</th></tr></thead>
+            <tbody>
+              <tr><td>未配置或未命中</td><td>仅处理当前容器中当前搬运任务识别的订单，不汇总其他订单判断整托直出；当前订单自身满足整托直出条件时按第 5 节执行。</td></tr>
+              <tr><td>已配置并命中</td><td>将当前容器关联且符合策略的订单纳入拣货范围。PDA 先拣当前搬运任务识别的订单，再按下架任务顺序处理其他匹配订单；每次只执行一个下架任务，数量和结果分别归属原订单。</td></tr>
+              <tr><td>凑成整托</td><td>按策略确定的订单范围汇总预占量，并按第 5 节检查整托全出、同一交货地（客户/拉线）及完整 UPN 分配条件。</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <section id="strategy">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="section-index">SECTION 05</span>
+              <h2>预占、下架与多进深清障</h2>
+              <p class="lead">按下架策略完成库存预占，确定拣货方式后，再进入下架与多进深清障。</p>
+            </div>
+          </div>
+
+          <div class="callout">
+            <strong>下架库存规则：</strong>在【WCS - 策略管理 - 下架策略】中新增“整托优先”，与“效率优先”“清空容器优先（尾数优先）”同级。按“优先策略 → 容器规则 → 目标库区”对候选 UPN 分组：先进先出按配置的日期类型和范围分段，无配置时默认一个分段；容器或库区同优先级时合组查找。选择“整托优先”时，在当前分组内先选整托；同一货道从外向内后进先出，多个货道之间按最外侧可取托盘进入货道时间从早到晚选择。
+            <p>“临期大库龄优先”为可配置的前置优先策略，默认不开启；开启后先处理临期库存，再处理大库龄库存，剩余需求进入上述常规流程。</p>
+            <p>规则、配置及案例详见 <a href="【OPPO】业务方案-音锋仓-下架策略-20260922v1.html" style="color:var(--blue-800);font-weight:700">《音锋仓下架策略-整托优先方案》</a>。</p>
+          </div>
+
+          <h3 style="margin-top:20px">预占数量口径</h3>
+          <p>普通订单与合并组均校验可用库存；不足时执行失败并提示，不生成有效下架、搬运任务，不转为短拣。</p>
+          <div class="grid-2">
+            <article class="mini-card soft">
+              <h3>按订单实际需求预占</h3>
+              <p>WCS 按订单实际需求数量预占库存。例如订单需求 420、匹配托盘库存 2200 时，只预占 420；无论预占托盘全部还是部分库存，该托盘的预占托盘数均计 1。</p>
+            </article>
+            <article class="mini-card soft">
+              <h3>同托盘多订单预占</h3>
+              <p>前一订单按实际需求预占后，托盘剩余库存可继续供其他订单预占。是否将多个订单作为同一拣货范围处理，由合单拣货策略决定。</p>
+            </article>
+          </div>
+
+          <h3 id="decision" style="margin-top:20px">自动拣货与 PDA 拣货判定</h3>
+
+          <div class="decision-grid">
+            <article class="decision-card auto">
+              <h3>整托直出</h3>
+              <span class="result">自动拣货</span>
+              <p>单一订单预占当前托盘全部库存；或命中合单拣货策略的订单汇总预占量覆盖托盘全部库存。无需拆箱或拆分 UPN。托盘到达出库口即自动拣货并扣减库存；原出库单完成拣货时回传 FWMS。</p>
+            </article>
+            <article class="decision-card pda">
+              <h3>部分出库或需要拆 UPN</h3>
+              <span class="result">PDA 拣货</span>
+              <p>托盘仅部分出库、同托订单交货地（客户/拉线）不同，或需要拆箱、拆分 UPN 时，在【PDA - 拣货出库】作业。订单范围及执行顺序按第 4.4 节合单拣货策略处理。</p>
+            </article>
+          </div>
+
+          <div class="callout">
+            <strong>术语：</strong>“人工拣货”和“PDA 拣货”均指操作人员在【PDA - 拣货出库】页面作业。
+          </div>
+
+          <h3 style="margin-top:20px">判定示例</h3>
+          <p>按各 UPN 的实际库存数量，判断能否将完整 UPN 分配给各订单；需要拆分任一 UPN 时，执行 PDA 拣货。以下多订单案例均已命中合单拣货策略，除特别说明外属于同一交货地（客户/拉线）。</p>
+          <div class="table-wrap">
+            <table class="compact-table">
+              <thead><tr><th>托盘实际 UPN 库存组成</th><th>托盘库存</th><th>订单分配</th><th>判定</th></tr></thead>
+              <tbody>
+                <tr><td>10 个 UPN，每个库存 100</td><td>1000</td><td>非合单：900</td><td>仅分配 9 个完整 UPN，托盘剩余 100，执行 PDA 拣货。</td></tr>
+                <tr><td>当前托盘 10 个 UPN，每个库存 100</td><td>1000</td><td>非合单：订单需求 1100</td><td>当前托盘 1000 全部分配，整托直出；另托预占 100，若仅占该托部分库存则执行 PDA 拣货。</td></tr>
+                <tr><td>9 个 UPN，每个库存 100</td><td>900</td><td>合单：300 + 300 + 300</td><td>每个订单分配 3 个完整 UPN，托盘全部出库，整托直出。</td></tr>
+                <tr><td>10 个 UPN，每个库存 100</td><td>1000</td><td>合单：300 + 300 + 400</td><td>各订单分别分配 3、3、4 个完整 UPN，托盘全部出库，整托直出。</td></tr>
+                <tr><td>9 个库存 100 的 UPN + 1 个库存 50 的 UPN</td><td>950</td><td>合单：350 + 300 + 300</td><td>350 分配 3 个 100 的 UPN 和 1 个 50 的 UPN；两个 300 各分配 3 个 100 的 UPN。无需拆分 UPN，整托直出。</td></tr>
+                <tr><td>9 个库存 100 的 UPN + 1 个库存 50 的 UPN</td><td>950</td><td>合单：350 + 350 + 250</td><td>一个 350 可分配 3 个 100 的 UPN 和唯一的 50 UPN；剩余完整 UPN 无法分配出另一个 350 和 250，须拆分一个 100 的 UPN。即使需求合计等于托盘库存，也不能整托直出，执行 PDA 合单拣货。</td></tr>
+                <tr><td>10 个 UPN，每个库存 100</td><td>1000</td><td>300（交货地（客户/拉线）A）+ 700（交货地（客户/拉线）B）</td><td>同托存在不同交货地（客户/拉线），执行 PDA 拣货。</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+
+          <h3 style="margin-top:20px">深位托盘出库</h3>
+          <ul class="key-list">
+            <li><strong>执行顺序：</strong>WCS 根据目标货道和深度识别外侧阻挡；清障完成并记录外侧托盘实际位置后，再下发目标托盘出库任务。</li>
+            <li><strong>库区规则：</strong>混托区、单托区从外向内依次移出阻挡托，移出后不回原货道；多板区整托场景只移一托外侧尾托，目标托盘出库后再将尾托放回原货道。</li>
+            <li><strong>移库范围：</strong>仅在同巷道（母车轨道）两侧库区移库，不跨层；每个托盘单独下发任务，指定源货道、源深度、目标货道和目标深度。同巷道无空货道时，LED 报错提醒，人工呼叫出库，作业完成后再回库。</li>
+            <li><strong>货道锁与任务控制：</strong>加锁、同类任务排队、清障移库及释放规则统一参见<a href="../【OPPO】业务方案-音锋仓-货道锁-20261102v1.html">《音锋仓货道锁方案》</a>。</li>
+          </ul>
+
+          <h4 style="margin-top:20px">案例位置示意</h4>
+          <p>A、B 为同巷道两条货道，01～03 表示由外向内的排列位置，不是托盘LPN。两个案例均以 A 货道三托在位为前提；B 货道为空，作为阻挡托移库目标。下表从上到下为内侧至母车轨道。</p>
+          <div class="table-wrap">
+            <table class="compact-table" aria-label="案例初始货道排列位置">
+              <thead><tr><th>位置方向</th><th>A 货道（初始有托盘）</th><th>B 货道（初始为空）</th></tr></thead>
+              <tbody>
+                <tr><td>内侧 / 最深位</td><td>A03</td><td>B03</td></tr>
+                <tr><td>中间位置</td><td>A02</td><td>B02</td></tr>
+                <tr><td>外侧 / 最靠近母车轨道</td><td>A01</td><td>B01</td></tr>
+                <tr><td colspan="3" style="text-align:center;background:#e8eef8"><strong>母车轨道（从此侧取放托盘）</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <table class="compact-table">
+              <thead><tr><th>场景与目标位置</th><th>阻挡位置</th><th>搬运顺序</th><th>结果</th></tr></thead>
+              <tbody>
+                <tr><td>混托区 / 单托区（3 进深）：预占 A03 处托盘</td><td>A01、A02</td><td>① A01 → B03；② A02 → B02；③ A03 处托盘出库。</td><td>移库托盘留在 B03、B02，不回 A 货道。</td></tr>
+                <tr><td>多板区：预占 A02 处整托</td><td>A01（尾托）</td><td>① A01 尾托移至同巷道 B 货道指定深度；② A02 处目标托盘出库；③ 尾托放回原 A 货道的 A02 位置。无空货道时 LED 报错，人工呼叫出库，作业完成后再回库。</td><td>只移动一托外侧尾托；一个托盘下发一个移库任务。</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+
+        </div>
+      </section>
+
+      <section id="special">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="section-index">SECTION 06</span>
+              <h2>拣货作业、结果回传与 LED 展示</h2>
+              
+            </div>
+          </div>
+
+          <h3>拣货与回传步骤</h3>
+          <ol class="key-list">
+            <li>托盘到达工作台后，WCS 按预占结果执行整托直出，或开放对应 PDA 拣货任务。</li>
+            <li>PDA 在【PDA - 拣货出库】扫描 UPN；需要拆分时调用 FWMS，成功后更新原、新 UPN 并按需打印标签。</li>
+            <li>每次有效拣货扣减库存并记录原订单明细的实际 UPN、实拣数量及差异；整托直出在到口时自动完成该操作。</li>
+            <li>出库单完成拣货后，WCS 向 FWMS 回传实际 UPN、实拣数量、短拣结果和完成状态；FWMS 接收后继续发货。</li>
+            <li>余料、空托按第 2、7 节处理。</li>
+          </ol>
+          <h3 id="transfer-outlet" style="margin-top:20px">搬运至其他出库口</h3>
+          <p><strong>操作入口：</strong>PDA 首页独立菜单【PDA - 搬运至其他出库口】，支持在各出库口之间调整托盘搬运目的地。</p>
+          <div class="table-wrap">
+            <table class="compact-table">
+              <thead><tr><th>业务场景</th><th>现场处理</th></tr></thead>
+              <tbody>
+                <tr><td>5 / 6 号口整托直出</td><td>托盘到口后，选择搬运至 1 / 2 / 3 号口，替代音锋控制屏手动改向；叉车取走物料后，空托盘自动送至叠盘机。</td></tr>
+                <tr><td>混托区无空位</td><td>一般将 5 / 6 号口托盘搬运至 4 号口，叉出后在线外暂存；4 号口繁忙时，现场可直接从 5 / 6 号口叉下，在线外暂存。</td></tr>
+                <tr><td>其他出库口调整</td><td>按现场需要选择 1～6 号目标出库口，执行托盘输送线搬运。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <table class="compact-table">
+              <thead><tr><th>页面字段 / 操作</th><th>功能规则</th></tr></thead>
+              <tbody>
+                <tr><td>起始点位</td><td>必填，自动填充当前工作台点位。</td></tr>
+                <tr><td>容器编号</td><td>必填，自动填充当前托盘LPN。</td></tr>
+                <tr><td>目标点位</td><td>必填，单选，选项为 1～6 号出库口。</td></tr>
+                <tr><td>执行</td><td>点击【执行】后，WCS 生成搬运任务并调用 RCS-11 下发；入参为容器号（托盘LPN）、任务号、起始点位、目标点位，返回成功 / 失败。</td></tr>
+                <tr><td>搬运反馈</td><td>RCS 通过 RCS-12 反馈搬出成功和到达，WCS 更新托盘位置及对应出库口 LED。</td></tr>
+                <tr><td>拣货结果</td><td>整托直出已在首次到口时完成自动拣货和库存扣减，搬运至其他出库口后不重复执行。</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style="margin-top:20px">作业校验与处理</h3>
+          <div class="table-wrap">
+            <table class="compact-table" data-search-table>
+              <thead><tr><th>控制项</th><th>触发时机</th><th>规则</th><th>结果</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><strong>现场短拣</strong></td>
+                  <td>【PDA - 拣货出库】提交拣货</td>
+                  <td>仅 FWMS 标识允许短拣的单据可勾选；合并组中哪个原单拣选不足，短少归属哪个单。</td>
+                  <td>二次确认，按实际数量完成并回传。</td>
+                </tr>
+                <tr>
+                  <td><strong>扫描数量超过最终需求</strong></td>
+                  <td>PDA 扫描后累计量超过 FWMS 最终需求</td>
+                  <td>WCS 拦截本次扫描，不更新库存与实拣结果。</td>
+                  <td>按剩余需求拆分或更换 UPN 后重新扫描。</td>
+                </tr>
+                <tr>
+                  <td><strong>FWMS 指定 UPN</strong></td>
+                  <td>出库单下发 / 预占</td>
+                  <td>严格限制在指定 UPN 范围；冻结 UPN 只有对应业务类型明确允许时才能出库。</td>
+                  <td>指定库存不可用时不得自动替换为普通库存。</td>
+                </tr>
+                <tr>
+                  <td><strong>扫描 UPN 不属于当前可拣任务</strong></td>
+                  <td>【PDA - 拣货出库】扫描 UPN</td>
+                  <td>校验 UPN 是否属于当前已激活的下架任务；同一容器其他订单的 UPN 须等待对应任务按顺序激活。</td>
+                  <td>拦截本次扫描，不更新拣货量和库存。</td>
+                </tr>
+                <tr>
+                  <td><strong>UPN 拆分失败</strong></td>
+                  <td>FWMS / WCS 拆分交互</td>
+                  <td>保留原 UPN，不更新 WCS 库存，不生成成功打印结果；修复接口或数据后重试。</td>
+                  <td>当前拣货任务保持未完成。</td>
+                </tr>
+                <tr>
+                  <td><strong>LED 展示 / 刷新失败</strong></td>
+                  <td>任务下发分配、到口、离口、成功扫码、清除占位成功或待处理队列变化</td>
+                  <td>记录失败事件；重试前由 WCS 按当前点位状态重新选择显示内容，幂等下发最新信息，避免旧 LPN 或旧业务画面覆盖当前显示。</td>
+                  <td>不回滚已成功的单据执行、搬运或拣货结果。</td>
+                </tr>
+                <tr>
+                  <td><strong>实拣结果回传失败</strong></td>
+                  <td>WCS → FWMS</td>
+                  <td>保留已记录的实拣结果，按原出库单号幂等重试，不重复扣减库存。</td>
+                  <td>标记待回传，不阻塞已触发的余料或空托实物处理。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style="margin-top:20px">PDA - 清除站点托盘占位</h3>
+<p><strong>背景与适用范围：</strong>异常托盘调整后重新投线，或更换其他托盘投线时，若 RCS 仍保留原托盘占位，扫码器将无法识别后续 LPN。当前通过 PLC 电控系统手动清除占位；未来运维人员不再允许直接操作 PLC，因此新增【PDA - 清除站点托盘占位】，适用于入库口、出库口。</p>
+<ol><li>运维人员在【PDA - 清除站点托盘占位】选择站点，执行清除。</li><li>WCS 调用 RCS-13，传入站台号。</li><li>RCS 返回成功后，WCS 更新点位信息；出库口由 WCS 按点位状态重新选择 LED 显示内容。</li><li>托盘重新投线，扫码器重新识别 LPN，由 WCS 下发对应门型 LED 信息。</li></ol>
+<p><strong>失败处理：</strong>RCS 清除失败时提示失败原因，允许重试；WCS 不将点位标记为已清除。</p>
+
+          <h3 style="margin-top:20px">LED 显示字段</h3>
+          <div class="callout">
+            <strong>统一规则：</strong>1～6 号工作台字段一致，显示内容按作业场景切换。图 1、图 2 分别为 3 号口整托直出和 5 号口 PDA 拣货示例。
+          </div>
+
+          <div class="evidence-grid" aria-label="LED 现场显示样图">
+            <figure class="evidence-card">
+              <img src="assets/LED样图-3号口-整托直出.png" alt="3号口整托直出时的 LED 现场显示样图">
+              <figcaption>
+                <strong>图 1｜3 号口整托直出</strong>
+                展示 Vendor、SO、SKU、Qty、Plt、LPNQty、Pick 及 NoPick；表示整托直出，无需人工拣货，系统已自动执行拣货。
+              </figcaption>
+            </figure>
+            <figure class="evidence-card">
+              <img src="assets/LED样图-5号口-PDA人工拣货.png" alt="5号口 PDA 人工拣货时的 LED 现场显示样图">
+              <figcaption>
+                <strong>图 2｜5 号口 PDA 人工拣货</strong>
+                展示通用出库信息及 NeedToPick，提示现场进入【PDA - 拣货出库】执行人工拣选。
+              </figcaption>
+            </figure>
+          </div>
+
+          <div class="table-wrap">
+            <table class="compact-table" data-search-table>
+              <thead><tr><th>屏显字段</th><th>业务含义</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Vendor</strong></td><td>供应商 / 货源标识。</td></tr>
+                <tr><td><strong>SO</strong></td><td>FWMS 出库单号 / SO。</td></tr>
+                <tr><td><strong>SKU</strong></td><td>当前作业物料编码。</td></tr>
+                <tr><td><strong>Qty（QTY）</strong></td><td>示例：6000 / 6000 / 0。三个值依次为：①当前订单需求数量；②当前订单预占数量；③当前订单累计已拣数量，均按“订单 + 物料代码明细行”统计。WCS 按订单实际需求数量预占；每成功扫描一次 UPN，将该 UPN 数量累计到第三个值。</td></tr>
+                <tr><td><strong>Plt（PLT）</strong></td><td>示例：27 / 1。第一个值为当前订单预占托盘个数，第二个值为当前订单累计已拣托盘个数，均按“订单 + 物料代码明细行”统计；托盘只预占部分库存也计为 1 个预占托盘。</td></tr>
+                <tr><td><strong>LPN</strong></td><td>当前到口托盘的完整托盘LPN。</td></tr>
+                <tr><td><strong>LPNQty（LPNQTY）</strong></td><td>当前托盘上需要拣选的物料总数量；每成功扫描一次 UPN，按该 UPN 数量实时扣减。</td></tr>
+                <tr><td><strong>Pick（PICK）</strong></td><td>待拣数量；每成功扫描一次 UPN，按该 UPN 数量实时扣减。</td></tr>
+                <tr><td><strong>NeedToPick / NoPick</strong></td><td>NeedToPick：需要人工进入【PDA - 拣货出库】作业；NoPick：整托直出，无需人工拣货，系统已自动执行拣货。</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style="margin-top:20px">按场景显示与刷新</h3>
+          <div class="table-wrap">
+            <table class="compact-table" data-search-table>
+              <thead><tr><th>场景</th><th>触发条件</th><th>LED 内容</th><th>交互规则</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><strong>出库口无托盘、有待处理任务</strong></td>
+                  <td>搬运任务已下发分配到该出库口，且该口当前无托盘</td>
+                  <td>最早待处理任务对应的业务信息（出库单、盘点、隔离筛选等）</td>
+                  <td>按搬运任务下发分配到该出库口的时间升序选择最早待处理任务，由 WCS 下发其对应业务信息；有托盘时优先显示当前 LPN，后续任务不能覆盖。</td>
+                </tr>
+                <tr>
+                  <td><strong>整托直出到口</strong></td>
+                  <td>托盘到达已分配的 1～6 号任一工作台，且判定为整托直出</td>
+                  <td>Vendor、SO、SKU、Qty、Plt、LPN、LPNQty、Pick、NoPick</td>
+                  <td>WCS 优先下发当前到口 LPN 的实时业务信息并显示 NoPick，同时自动完成拣货和库存扣减；同一到口事件只处理一次。</td>
+                </tr>
+                <tr>
+                  <td><strong>PDA 拣货到口</strong></td>
+                  <td>托盘到达已分配的 1～6 号任一工作台，且需要人工拣选</td>
+                  <td>通用字段 + NeedToPick；Qty 显示初始累计已拣量，Pick 显示初始待拣数量</td>
+                  <td>WCS 优先下发当前到口 LPN 的实时业务信息，包含 LPN、LPNQty、Pick 和 NeedToPick，等待操作人员进入【PDA - 拣货出库】。</td>
+                </tr>
+                <tr>
+                  <td><strong>PDA 拣货进行中</strong></td>
+                  <td>PDA 每成功扫描一个 UPN</td>
+                  <td>Qty 第三个值按 UPN 数量增加；LPNQty、Pick 按 UPN 数量扣减；单据、SKU、LPN 等上下文保持不变</td>
+                  <td>当前在位 LPN 的一个 UPN 成功扫码对应一次库存实时扣减和一次 WCS → RCS 刷新；扫码失败、校验失败或重复事件不触发、不重复累计；旧 LPN 的延迟事件不得覆盖当前画面。</td>
+                </tr>
+                <tr>
+                  <td><strong>PDA 拣货完成</strong></td>
+                  <td>最后一个 UPN 成功扫码后，本托达到应拣量</td>
+                  <td>Qty 第三个值完成本托累计；LPNQty、Pick 扣减至 0；Plt 第二个值累计增加 1 个已拣托盘</td>
+                  <td>沿用最后一个 UPN 的扫码刷新，不额外新增一次“完成”调用；托盘存在部分预占也按 1 个已拣托盘累计，WCS 继续按出库单完成条件记录并回传实拣结果。</td>
+                </tr>
+                <tr>
+                  <td><strong>回库无可用货道</strong></td>
+                  <td>按<a href="../【OPPO】业务方案-音锋仓-回库策略-20261104v1.html#matching">《音锋仓回库策略方案》的货道匹配算法</a>未找到可用货道</td>
+                  <td>当前托盘LPN及“无可用货道”异常提示</td>
+                  <td>回库无可用库位时，PDA 报错，WCS 请求 RCS 在回库点位对应的 LED 显示错误提醒；重新分配后按最新结果更新提示。</td>
+                </tr>
+                <tr>
+                  <td><strong>清除站点托盘占位成功</strong></td>
+                  <td>RCS-13 返回成功</td>
+                  <td>按点位状态重新选择的业务信息</td>
+                  <td>WCS 更新点位信息并重新选择显示对象；重新投线识别 LPN 后，优先显示当前 LPN 的实时信息。</td>
+                </tr>
+                <tr>
+                  <td><strong>待处理队列变化</strong></td>
+                  <td>该出库口待处理搬运任务队列发生变化</td>
+                  <td>当前 LPN 的实时信息，或最早待处理任务对应的业务信息</td>
+                  <td>WCS 重新判断显示对象；有托盘时保持当前 LPN 优先，无托盘时按搬运任务下发分配到该口的时间升序选择。</td>
+                </tr>
+                <tr>
+                  <td><strong>托盘离开工作台</strong></td>
+                  <td>托盘已离开出库口</td>
+                  <td>按当前点位状态重新选择的 LPN 实时信息或最早待处理任务的业务信息</td>
+                  <td>停止刷新旧 LPN；由 WCS 重新判断点位状态，有托盘时展示当前 LPN，无托盘时按搬运任务下发分配到该口的时间升序展示最早待处理任务对应的信息。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+
+        </div>
+      </section>
+
+      <section id="return">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="section-index">SECTION 07</span>
+              <h2>回库策略</h2>
+            </div>
+          </div>
+          <div class="callout">统一引用<a href="../【OPPO】业务方案-音锋仓-回库策略-20261104v1.html">《音锋仓回库策略方案》</a>，包括待回库托盘数量统计、托盘存放条件、货道匹配、轨道评分、逐托动态分配、占用及搬运执行规则。</div>
+          <p>各场景的单据和库存处理按对应业务规则执行；接口定义见<a href="../音锋仓入库业务需求/【OPPO】需求梳理-音锋仓-入库业务-20260820v1.html#wcs-rcs">入库方案中的 WCS 与 RCS 接口清单</a>。</p>
+          <p><strong>回库无位处理：</strong>按回库策略未找到可用库位时，PDA 报错，并通过 LED 显示“无可用货道”错误提醒。</p>
+        </div>
+      </section>
+
+      <section id="interface">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="section-index">SECTION 08</span>
+              <h2>接口</h2>
+            </div>
+          </div>
+
+          <h3>WCS 与 FWMS</h3>
+          <div class="table-wrap">
+            <table class="compact-table">
+              <thead><tr><th>编号</th><th>方向</th><th>接口</th><th>触发与规则</th></tr></thead>
+              <tbody>
+                <tr><td>IF-OUT-01</td><td>FWMS → WCS</td><td>出库单同步 / 取消</td><td>同步单头、明细、交货地（客户/拉线）、短拣权限及指定 UPN；取消请求幂等处理。</td></tr>
+                <tr><td>IF-OUT-09</td><td>WCS → FWMS</td><td>UPN 拆分</td><td>PDA 提交拆分时调用；FWMS 返回成功后，WCS 更新原 UPN 和新 UPN 库存。</td></tr>
+                <tr><td>IF-OUT-10</td><td>WCS → FWMS</td><td>标签打印</td><td>拆分打印或补打时调用，传入 UPN、份数、打印机及操作人。</td></tr>
+                <tr><td>IF-OUT-11</td><td>WCS → FWMS</td><td>拣货结果回传</td><td>出库单完成拣货后，按 FWMS 订单明细回传实际 UPN、实拣数量、短拣结果及完成状态；不等待余料回库或空托处理，回传结果幂等处理。</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style="margin-top:20px">WCS 与 RCS</h3>
+          <div class="callout">统一引用<a href="../音锋仓入库业务需求/【OPPO】需求梳理-音锋仓-入库业务-20260820v1.html#wcs-rcs">入库方案中的 WCS 与 RCS 接口清单</a>（RCS-01～RCS-13，双方已确认）。</div>
+          <p>【PDA - 搬运至其他出库口】使用 RCS-11“托盘输送线搬运任务下发”和 RCS-12“托盘输送线搬运任务执行反馈”，操作规则见<a href="#transfer-outlet">搬运至其他出库口</a>。</p>
+
+        </div>
+      </section>
+
+      <section id="acceptance">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="section-index">SECTION 09</span>
+              <h2>待确认项</h2>
+            </div>
+          </div>
+
+          <div class="pending-grid">
+            <article class="pending-item">
+              <h4>Q3 包装规格超发</h4>
+              <p>需确认包装规格由谁维护、超发数量由 FWMS 计入下发需求还是由 WCS 计算，以及允许超发的条件、数量上限和实拣回传口径。</p>
+            </article>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">OPPO WCS · 音锋仓出库业务方案 · 20260822 v1</footer>
+
+  <script>
+    (() => {
+      const navLinks = [...document.querySelectorAll('.side-nav a')];
+      const sections = navLinks.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+      const updateActiveNav = () => {
+        const current = sections.reduce((selected, section) => section.getBoundingClientRect().top <= 150 ? section : selected, sections[0]);
+        navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${current.id}`));
+      };
+      document.addEventListener('scroll', updateActiveNav, { passive: true });
+      updateActiveNav();
+
+      document.querySelectorAll('[data-table-search]').forEach(input => {
+        const table = document.querySelector(input.dataset.tableSearch);
+        if (!table) return;
+        input.addEventListener('input', () => {
+          const keyword = input.value.trim().toLowerCase();
+          table.querySelectorAll('tbody tr').forEach(row => {
+            row.hidden = keyword !== '' && !row.textContent.toLowerCase().includes(keyword);
+          });
+        });
+      });
+
+    })();
+  </script>
+</body>
+</html>

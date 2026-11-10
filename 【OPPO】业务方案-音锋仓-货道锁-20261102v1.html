@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>音锋仓货道锁方案</title>
+  <style>
+    :root{--ink:#172b43;--muted:#5c6d82;--blue:#075fc4;--line:#d9e3ef;--canvas:#f2f6fb}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--canvas);font:15px/1.8 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}a{color:var(--blue);text-underline-offset:3px}
+    header{background:#082d56;color:#fff;padding:32px max(24px,calc((100% - 1180px)/2))}h1{font-size:clamp(28px,4vw,38px);line-height:1.35;margin:0 0 12px}.meta{color:#d4e5f8;font-size:13px}header p{margin:8px 0 0}
+    .layout{display:grid;grid-template-columns:185px minmax(0,1fr);gap:22px;max-width:1228px;margin:auto;padding:24px}nav{position:sticky;top:20px;align-self:start;border:1px solid var(--line);background:white;border-radius:12px;padding:10px}nav a{display:block;padding:8px 10px;text-decoration:none;border-radius:6px}nav a:hover{background:#edf5ff}main{min-width:0}section{background:white;padding:24px;border:1px solid var(--line);border-radius:14px;margin-bottom:20px;scroll-margin-top:20px}h2{margin:0 0 14px;font-size:23px;line-height:1.45}p{margin:10px 0}ul,ol{padding-left:24px;margin:10px 0}li{margin:7px 0}.note{padding:12px 16px;background:#eef5ff;border-left:4px solid var(--blue);border-radius:6px;margin:14px 0}.table-wrap{border:1px solid var(--line);border-radius:9px;overflow:hidden;margin:14px 0}table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:14px}th,td{padding:11px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);overflow-wrap:anywhere;word-break:break-word}th{color:white;background:var(--blue)}tr:nth-child(even) td{background:#f5f9ff}tr:last-child td{border-bottom:0}code{background:#edf2f8;border-radius:4px;padding:1px 4px}footer{max-width:1228px;margin:auto;padding:0 24px 30px;color:var(--muted);font-size:13px}
+    @media(max-width:800px){.layout{display:block;padding:16px}nav{position:static;display:flex;flex-wrap:wrap;margin-bottom:16px}nav a{padding:6px 9px}section{padding:18px}th,td{padding:9px 8px;font-size:13px}}
+    @media print{body{background:white;font-size:11pt}header{background:white;color:var(--ink);padding:0 0 16px}.meta{color:var(--muted)}.layout{display:block;padding:0}nav{display:none}section{border-radius:0;box-shadow:none;margin-bottom:14px}h2{break-after:avoid}tr{break-inside:avoid}th{color:var(--ink);background:#eaf2fc}footer{padding:8px 0}a{color:var(--ink)}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>音锋仓货道锁方案</h1>
+    <div class="meta">V1 · 2026-11-02 · 进行中方案 / 待评审</div>
+    <p>按货道控制搬入、搬出与移库，支持搬出过程中叠加清障移库。</p>
+  </header>
+  <div class="layout">
+    <nav aria-label="章节导航">
+      <a href="#timing">货道锁的使用时机</a>
+      <a href="#rules">1 货道锁规则</a>
+      <a href="#types">2 业务与锁类型</a>
+      <a href="#release">3 完成与释放</a>
+      <a href="#clearance">4 深位搬出与清障</a>
+      <a href="#relocation">5 移库双货道控制</a>
+      <a href="#exceptions">6 异常处理</a>
+    </nav>
+    <main>
+      <section id="timing">
+        <h2>货道锁的使用时机</h2>
+        <p><strong>使用原因：</strong>搬入、搬出和移库会改变货道内托盘的位置与占用。货道锁用于防止深度重复分配、取货顺序冲突及清障过程中托盘排列被其他任务改变。</p>
+        <p>WCS 执行托盘搬运前，先取得相关货道锁，再向 RCS 返回可执行任务或下发搬运任务。</p>
+        <div class="table-wrap"><table>
+          <colgroup><col style="width:15%"><col style="width:43%"><col style="width:42%"></colgroup>
+          <thead><tr><th>动作</th><th>加锁时机</th><th>锁定范围</th></tr></thead>
+          <tbody>
+            <tr><td>搬入</td><td>入库／回库第一段请求确定目标货道后，返回可执行任务前</td><td>目标货道加搬入锁</td></tr>
+            <tr><td>搬出</td><td>安排托盘搬出前，包括其前置清障阶段</td><td>源货道加搬出锁</td></tr>
+            <tr><td>独立移库</td><td>下发移库任务前</td><td>源、目标货道加移库锁</td></tr>
+            <tr><td>搬出清障</td><td>发现浅位阻挡，下发清障移库任务前</td><td>源货道保留搬出锁并叠加移库锁，目标货道加移库锁</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+      <section id="rules">
+        <h2>1. 货道锁规则</h2>
+        <p>搬入锁与搬出锁互斥；移库锁与搬入锁互斥。移库锁与搬出锁通常互斥，仅当前搬出业务的关联清障、尾托回放允许叠加。</p>
+        <div class="table-wrap"><table>
+          <colgroup><col style="width:22%"><col style="width:23%"><col style="width:23%"><col style="width:32%"></colgroup>
+          <thead><tr><th>货道当前状态</th><th>搬入任务</th><th>搬出任务</th><th>移库任务</th></tr></thead>
+          <tbody>
+            <tr><td>未加锁</td><td>可加搬入锁</td><td>可加搬出锁</td><td>可加移库锁</td></tr>
+            <tr><td>搬入锁</td><td>接入当前锁，顺序执行</td><td>等待搬入锁释放</td><td>等待搬入锁释放</td></tr>
+            <tr><td>搬出锁</td><td>等待搬出锁释放</td><td>接入当前锁，顺序执行</td><td>独立移库等待；当前搬出业务的关联清障、尾托回放可叠加移库锁</td></tr>
+            <tr><td>独立移库锁</td><td>等待移库锁释放</td><td>等待移库锁释放</td><td>满足源、目标货道条件后顺序执行</td></tr>
+            <tr><td>搬出锁＋清障移库锁</td><td>等待</td><td>可排队，暂停搬出动作</td><td>优先执行所属搬出业务的关联移库；其他移库等待</td></tr>
+          </tbody>
+        </table></div>
+        <ul>
+          <li><strong>同类接入：</strong>已有对应锁时，同类任务接入排队，同一货道逐托执行。</li>
+          <li><strong>关联叠加：</strong>清障、尾托回放期间保留搬出锁并叠加移库锁，先执行关联移库；移库完成后释放对应移库锁，再恢复搬出。</li>
+          <li><strong>业务衔接：</strong>清障、目标托搬出、尾托回放连续调度，无关任务等待。</li>
+          <li><strong>锁的释放：</strong>当前锁下的任务全部完成后释放；搬出锁需等待所属搬出及关联移库全部完成。</li>
+        </ul>
+      </section>
+      <section id="types">
+        <h2>2. 业务与锁类型</h2>
+        <div class="table-wrap"><table>
+          <colgroup><col style="width:17%"><col style="width:25%"><col style="width:58%"></colgroup>
+          <thead><tr><th>锁类型</th><th>搬运方向</th><th>主要业务</th></tr></thead>
+          <tbody>
+            <tr><td>搬入锁</td><td>工作台 → 库位</td><td>F组盘入库、质检入库、盘点回库、拣货余料回库、理货合板回库、隔离筛选回库</td></tr>
+            <tr><td>搬出锁</td><td>库位 → 工作台</td><td>拣货出库（F下发出库单）、理货出库、盘点出库、隔离筛选出库、呼叫出库</td></tr>
+            <tr><td>移库锁</td><td>库位 → 库位</td><td>浅位清障、后台库内移库、尾托回放</td></tr>
+          </tbody>
+        </table></div>
+        <p>工作台包括入库口、出库口。</p>
+      </section>
+      <section id="release">
+        <h2>3. 完成与释放</h2>
+        <div class="table-wrap"><table>
+          <colgroup><col style="width:15%"><col style="width:48%"><col style="width:37%"></colgroup>
+          <thead><tr><th>锁类型</th><th>单托完成判定</th><th>释放条件</th></tr></thead>
+          <tbody>
+            <tr><td>搬入锁</td><td>收到“托盘搬运任务执行完成反馈”，更新库存位置和任务</td><td>当前锁下的搬入任务全部完成</td></tr>
+            <tr><td>搬出锁</td><td>收到“托盘出库任务执行反馈”的 <code>status=1</code>（搬出成功），更新源货道占用</td><td>当前锁下的搬出及关联清障、回放任务全部完成</td></tr>
+            <tr><td>移库锁</td><td>收到“托盘移库任务执行反馈”，更新源、目标位置</td><td>对应货道当前锁下的移库任务全部完成</td></tr>
+          </tbody>
+        </table></div>
+        <p>搬入第二段请求沿用已有搬入锁，在锁内确定深度。搬出反馈 <code>status=2</code> 用于确认到达工作台。</p>
+      </section>
+      <section id="clearance">
+        <h2>4. 深位搬出与清障</h2>
+        <ol>
+          <li>源货道加搬出锁。</li>
+          <li>有浅位阻挡时，暂停搬出；源货道叠加移库锁，目标货道加移库锁。</li>
+          <li>由外向内逐托移走阻挡托盘，一个托盘下发一个移库任务。</li>
+          <li>清障完成并更新位置后，释放清障移库锁，保留搬出锁。</li>
+          <li>搬出目标托盘，继续处理后续搬出任务。</li>
+          <li>需要尾托回放时，保留搬出锁，叠加移库锁完成回放，再判断是否释放搬出锁。</li>
+        </ol>
+        <div class="note">清障移库限定在同巷道母车轨道两侧库区，不跨层。无可用空货道时，LED 报错，人工呼叫出库，作业完成后再回库。</div>
+      </section>
+      <section id="relocation">
+        <h2>5. 移库双货道控制</h2>
+        <ul>
+          <li>独立移库要求源、目标货道均无搬入锁、搬出锁。</li>
+          <li>搬出关联清障允许源货道保留所属业务的搬出锁；目标货道须满足移库条件。</li>
+          <li>同时取得源、目标货道的锁后执行移库。</li>
+          <li>同货道调整深度只涉及该货道。</li>
+          <li>每托执行前，重新校验位置、深度、阻挡及可用状态。</li>
+        </ul>
+      </section>
+      <section id="exceptions">
+        <h2>6. 异常处理</h2>
+        <div class="table-wrap"><table>
+          <colgroup><col style="width:35%"><col style="width:65%"></colgroup>
+          <thead><tr><th>情况</th><th>处理方式</th></tr></thead>
+          <tbody>
+            <tr><td>明确任务未被 RCS 接收</td><td>撤销该任务占用，再判断是否解锁。</td></tr>
+            <tr><td>请求超时、搬运故障或位置不明确</td><td>保留相关锁，暂停后续任务。</td></tr>
+            <tr><td>取消或人工结束任务</td><td>确认实际位置并更新任务、货道占用后，再判断是否解锁。</td></tr>
+            <tr><td>清障失败</td><td>保留搬出锁及相关移库锁，暂停搬出。</td></tr>
+            <tr><td>重复反馈</td><td>位置更新与锁释放幂等处理。</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+    </main>
+  </div>
+  <footer>OPPO WCS · 音锋仓货道锁方案 · V1</footer>
+</body>
+</html>
