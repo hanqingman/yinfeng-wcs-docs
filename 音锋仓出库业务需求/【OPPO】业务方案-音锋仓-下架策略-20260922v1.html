@@ -13,6 +13,9 @@
     .layout{max-width:1210px;margin:auto;padding:28px 24px 60px;display:grid;grid-template-columns:190px minmax(0,1fr);gap:24px}nav{position:sticky;top:20px;align-self:start;background:white;border:1px solid var(--line);border-radius:14px;padding:12px}nav a{display:block;padding:9px 10px;text-decoration:none;border-radius:7px}nav a:hover{background:#edf5ff}main{min-width:0}
     section{scroll-margin-top:20px;background:white;border:1px solid var(--line);border-radius:16px;padding:26px;margin-bottom:22px;box-shadow:0 7px 22px #071f3d08}.eyebrow{color:var(--blue);font-size:12px;font-weight:750;letter-spacing:.08em}h2{margin:5px 0 14px;font-size:24px;line-height:1.4}h3{margin:22px 0 8px;font-size:18px}p{margin:10px 0}ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}.note{padding:14px 18px;border-left:4px solid var(--blue);background:#eff6ff;border-radius:7px;margin:16px 0}.note.green{border-color:#087f6f;background:#eaf8f2}
     .sequence{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.step{background:#f2f7ff;border:1px solid #d5e5fb;padding:13px;border-radius:10px}.step b{display:block;color:#0a4b96;font-size:12px}.step span{font-weight:650}.table-wrap{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px}table{width:100%;min-width:610px;border-collapse:collapse;font-size:14px}th,td{padding:12px 14px;vertical-align:top;text-align:left;border-bottom:1px solid var(--line)}th{background:#095cb9;color:white}tr:nth-child(even) td{background:#f5f9ff}tr:last-child td{border-bottom:0}.small{font-size:13px;color:var(--muted)}footer{color:var(--muted);padding:0 5px}
+    .allocation-case{min-width:0;width:100%;table-layout:fixed;font-size:13px;line-height:1.5}.allocation-case th,.allocation-case td{padding:8px 6px;vertical-align:middle}.allocation-case th{overflow-wrap:anywhere}.allocation-case th:nth-child(1){width:13%}.allocation-case th:nth-child(2){width:10%}.allocation-case th:nth-child(3){width:6%}.allocation-case th:nth-child(4){width:9%}.allocation-case th:nth-child(n+5):nth-child(-n+7){width:12%}.allocation-case th:nth-child(8),.allocation-case th:nth-child(9){width:9%}.allocation-case th:nth-child(10){width:8%}.allocation-case td:nth-child(-n+2){overflow-wrap:anywhere}.allocation-case td:nth-child(n+3){text-align:center;font-variant-numeric:tabular-nums}
+    .allocation-case tbody tr.lane-400101 td{background:#e4f0fc}.allocation-case tbody tr.lane-400201 td{background:#e6f4e9}.allocation-case tbody tr.lane-400301 td{background:#fbe4e7}.allocation-case tbody tr.lane-R200401 td{background:#fff0d8}.allocation-case tbody tr.lane-R200501 td{background:#eee7fa}.allocation-case tbody td.lane{border-top:2px solid #b6c5d6}
+    .allocation-case tbody td{overflow-wrap:normal;text-align:center;font-variant-numeric:tabular-nums}.allocation-case tbody td.track,.allocation-case tbody td.lane{text-align:left;overflow-wrap:anywhere;font-weight:600}.allocation-case tbody td.track{background:#edf2f8;border-right:1px solid #b6c5d6}
     @media(max-width:800px){.layout{display:block;padding:18px 14px}nav{position:static;display:flex;flex-wrap:wrap;margin-bottom:18px}nav a{padding:6px 10px}section{padding:20px}.sequence{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media print{body{background:white;font-size:11pt}header{background:white;color:var(--ink);padding:0 0 15px}header a,header p{color:var(--ink)}.meta span{border-color:var(--line)}.layout{display:block;padding:0}nav{display:none}section{box-shadow:none;padding:18px;border-radius:0}h2,h3{break-after:avoid}tr,.step{break-inside:avoid}.table-wrap{overflow:visible}table{min-width:0}a{color:var(--ink)}}
   </style>
@@ -21,78 +24,113 @@
   <header>
     <a href="【OPPO】需求梳理-音锋仓-出库业务-20260822v1.html#strategy">← 音锋仓出库业务方案 · 预占、下架与多进深清障</a>
     <h1>音锋仓下架策略-整托优先方案</h1>
-    <p>在下架策略的库存规则中新增“整托优先”，支持音锋仓整托选择与同货道连续出库。</p>
-    <div class="meta"><span>音锋仓</span><span>2026-09-22 · v1</span><span>待业务评审</span></div>
+    <p>非混托库存优先，按轨道轮流分配，轨道内优先选择本次可用托盘数较少的货道。</p>
+    <div class="meta"><span>音锋仓</span><span>2026-09-22 · v1</span><span>业务审核通过</span></div>
   </header>
   <div class="layout">
     <nav aria-label="章节导航">
-      <a href="#overview">01 规则定位</a>
-      <a href="#groups">02 通用规则衔接</a>
-      <a href="#selection">03 整托优先库存匹配</a>
-      <a href="#lane">04 同货道连续出库</a>
-      <a href="#examples">05 案例</a>
+      <a href="#overview">01 规则目标</a>
+      <a href="#groups">02 通用库存筛选与分组</a>
+      <a href="#selection">03 容器库存、清障与统计</a>
+      <a href="#lane">04 轨道与货道排序</a>
+      <a href="#allocation">05 逐轨道、多轮预占</a>
+      <a href="#examples">06 案例</a>
     </nav>
     <main>
       <section id="overview">
-        <span class="eyebrow">SECTION 01</span><h2>规则定位</h2>
-        <p>在【WCS - 策略管理 - 下架策略】的“库存规则”中新增“整托优先”，与“效率优先”“清空容器优先（尾数优先）”同级。</p>
-        <p>选择本规则后，在通用策略已确定的每个 UPN 分组内，先预占整托，结合多板区同货道连续出库选择托盘，再以部分托盘补足剩余需求。</p>
+<span class="eyebrow">SECTION 01</span><h2>规则目标</h2>
+<p>“整托优先”指非混托库存优先，通过通用下架策略中的库区优先级体现。</p>
+<p>当前分组内，优先预占无需清障的库存，再预占需要清障的库存；通过轨道轮流分配提高搬出效率，同一轨道内优先选择可用托盘数较少的货道。</p>
       </section>
       <section id="groups">
-        <span class="eyebrow">SECTION 02</span><h2>通用规则衔接</h2>
-        <p>筛选本次可出库的 UPN、分组及可用量计算沿用通用下架策略（通用文档未纳入本评审站）：</p>
-        <ul>
-          <li><strong>分组顺序：</strong>优先策略 → 容器规则 → 目标库区。先进先出按配置的日期类型、范围分段，无配置时默认一个分段；同优先级容器或库区合组查找。</li>
-          <li><strong>临期大库龄优先：</strong>可配置，默认关闭；开启后按通用独立规则先行处理，剩余需求再进入常规分组。</li>
-          <li><strong>音锋仓配置：</strong>容器使用托盘，库区按托盘实际所在位置匹配下表配置。</li>
-        </ul>
-        <h3>音锋仓库区推荐配置</h3>
-        <p>预占优先级：输送线-从库区到工作台 ＞ 单板区、多板区 ＞ 混板区 ＞ 输送线-回库途中。优先级数字越小越先处理，同值合组查找。</p>
-        <div class="table-wrap"><table aria-label="音锋仓库区配置">
-          <thead><tr><th>库区</th><th>推荐优先级</th><th>配置说明</th></tr></thead>
-          <tbody>
-            <tr><td>输送线-从库区到工作台</td><td>1</td><td>优先预占正在从库区搬运至工作台的托盘可用库存。</td></tr>
-            <tr><td>单板区 / 多板区（含 3 / 4 / 6 板区）</td><td>2</td><td>单板区与多板区同级合组比较整托；多板区内部按可连续出库数量及到达时间选择货道，不按深度固定排序。</td></tr>
-            <tr><td>混板区</td><td>3</td><td>输送线出库途中及单板、多板区库存不足时，再匹配混板区。</td></tr>
-            <tr><td>输送线-回库途中</td><td>4</td><td>前述库存不足时，最后匹配正在回库途中的托盘可用库存。</td></tr>
-          </tbody>
-        </table></div>
-        <p class="small">同一日期分段内，较高优先级分组的部分库存也先于较低优先级分组的整托库存处理；库区推荐顺序不越过前置日期分段。</p>
-        <div class="note">“整托优先”仅在当前分组内生效，不能跳过更高优先级分组。当前分组不足时，按通用分组顺序继续。</div>
+<span class="eyebrow">SECTION 02</span><h2>通用库存筛选与分组</h2>
+<p>沿用通用下架策略，完成库存筛选、先进先出、容器规则及库区优先级分组。先进先出按配置的日期类型和范围分段；临期大库龄优先可配置，默认关闭。</p>
+<h3>音锋仓库区推荐配置</h3>
+<div class="table-wrap"><table><thead><tr><th>库区 / 状态</th><th>优先级</th></tr></thead><tbody><tr><td>输送线-从库区到工作台</td><td>1</td></tr>
+<tr><td>单板区 / 多板区</td><td>2</td></tr>
+<tr><td>混板区</td><td>3</td></tr>
+<tr><td>输送线-回库途中</td><td>4</td></tr></tbody></table></div>
+<p>数字越小越优先，同值合组查找。当前分组库存不足时，再进入下一分组。</p>
+<p>按订单实际需求数量预占，允许预占托盘的部分库存。</p>
       </section>
       <section id="selection">
-        <span class="eyebrow">SECTION 03</span><h2>整托优先库存匹配</h2>
-        <ol>
-          <li><strong>找整托：</strong>托盘实际库存全部符合当前分组条件、可全部预占，且数量不超过剩余需求，才算本次可选整托。标准托装量为 1000、实际库存为 900 时，全部预占 900 也算整托；托盘还留有其他库存则不算。</li>
-          <li><strong>选整托：</strong>多个整托可选时，多板区优先按<a href="#lane">同货道连续出库规则</a>选择；同一货道从外向内后进先出，不同货道之间按最外侧可取托盘进入货道时间从早到晚选择。每选一托，重新计算剩余需求。</li>
-          <li><strong>补剩余量：</strong>没有可选整托时，不同货道之间按最外侧可取托盘进入货道时间从早到晚选择部分托盘，每托只预占所需数量；同一货道仍从外向内取货。</li>
-        </ol>
-        <p>排序时间取托盘本次进入货道的到达时间；回库、移库后更新，已生成任务不重新选托。当前分组不足时，按分组顺序继续查找。</p>
+<span class="eyebrow">SECTION 03</span><h2>容器库存、清障判断与货道统计</h2>
+<h3>容器可用库存与库区特点</h3>
+<p>所有库区统一按容器汇总符合当前分组条件的 UPN 可用库存。有可用库存的容器计为 1 托，参与货道统计和预占。</p>
+<div class="table-wrap"><table><thead><tr><th>库区</th><th>货道存放特点</th></tr></thead><tbody>
+<tr><td>单板区</td><td>同一货道可存放不同外部单号、供应商、SKU 的非混托托盘。</td></tr>
+<tr><td>多板区</td><td>同一货道存放相同外部单号、供应商、SKU 的托盘，尾托与其他托盘使用相同的预占规则。</td></tr>
+<tr><td>混板区</td><td>同一货道可存放不同属性的托盘，单个托盘内也可混放不同外部单号、供应商、SKU。</td></tr>
+</tbody></table></div>
+<p>尾托只是库存数量较少，不作为单独的库存筛选类型。</p>
+<h3>清障判断</h3>
+<p>根据目标托盘搬出时的外侧阻挡情况判断是否需要清障。</p>
+<div class="table-wrap"><table><thead><tr><th>类型</th><th>判断规则</th></tr></thead><tbody>
+<tr><td>无需清障</td><td>外侧无阻挡，或外侧托盘已安排随本次出库先行搬走，目标托盘可随后搬出。</td></tr>
+<tr><td>需要清障</td><td>外侧仍有托盘阻挡，且不能随本次出库先行搬走，需要额外移库。</td></tr>
+</tbody></table></div>
+<p>外侧托盘即使只预占部分库存，只要已安排搬至工作台并让出通道，内侧目标托盘也无需额外清障。不因托盘是尾托，就直接认定需要清障。</p>
+<h3>货道可用托盘统计</h3>
+<ul>
+<li>在当前分组内，分别统计各货道的无需清障可用托盘数和需要清障可用托盘数。</li>
+<li>每个有符合条件可用库存的容器只计 1 托。外侧托盘不参与本次预占，不影响内侧符合条件的库存参与统计。</li>
+<li>本次可用托盘数不等于货道实际总托数，取完本次可用库存后，货道仍可能留有其他库存。</li>
+<li>输送线库存按所属优先级处理，不参与库内轨道、货道排序。</li>
+</ul>
       </section>
       <section id="lane">
-        <span class="eyebrow">SECTION 04</span><h2>多板区同货道连续出库</h2>
-        <p>当前分组有多个整托可选时，优先从同一货道连续取货，减少货道切换。</p>
-        <ol>
-          <li>从货道外侧向内查看整托候选；遇到不参与本次出库或不能执行的托盘，就停止计算该货道的连续可取量。</li>
-          <li>比较多个候选货道时，优先选择能连续满足剩余整托需求的货道；有多个货道均能满足时，选择最外侧可取托盘本次进入货道时间较早的货道。若均不能满足，选择连续可取量最多的货道；仍有多个货道并列时，按同一时间规则选择。</li>
-          <li>从选中货道的外侧开始依次预占。需求满足或遇到阻挡时停止，再比较其他货道；不为凑同货道额外清障。</li>
-        </ol>
-        <div class="note green">同一货道从外向内后进先出；多个货道之间按最外侧可取托盘进入货道时间从早到晚选择。仅比较当前能直接取出的托盘，不按货道总深度排序。</div>
+<span class="eyebrow">SECTION 04</span><h2>轨道与货道排序</h2>
+<p>先处理无需清障的库存，不足时再处理需要清障的库存。两类库存分别按轨道分组排序：</p>
+<div class="table-wrap"><table><thead><tr><th>排序层级</th><th>规则</th></tr></thead><tbody><tr><td>轨道之间</td><td>取各轨道内货道本轮可用托盘数的最小值，按该值从小到大排序</td></tr>
+<tr><td>同一轨道内</td><td>按货道本轮可用托盘数从小到大排序</td></tr>
+<tr><td>数量相同</td><td>比较候选货道最外侧参与本轮预占的托盘本次进入货道的时间，较早者优先</td></tr></tbody></table></div>
+<p>没有本轮可用库存的货道、轨道不参与排序。排序时间取托盘本次进入货道的到达时间，回库、移库后更新。</p>
+      </section>
+      <section id="allocation">
+<span class="eyebrow">SECTION 05</span><h2>逐轨道、多轮预占</h2>
+<ol>
+<li>在当前分组内，先匹配无需清障的容器库存。</li>
+<li>按本轮排序逐个遍历轨道，每个轨道选择一条可用托盘数最少的货道。</li>
+<li>对该货道符合条件的容器，从外向内逐托预占，每托按剩余需求分配数量。</li>
+<li>需求满足即停止；仍不足时，预占完该货道本轮可用库存，再转下一轨道。</li>
+<li>一轮结束仍不足，重新统计剩余库存并排序，进入下一轮。</li>
+<li>无需清障的库存匹配完仍不足，再按同样方式匹配需要清障的库存。</li>
+<li>当前分组全部匹配后仍不足，再进入下一库存分组。</li>
+</ol>
+<p>“轨道均分”按轨道轮流选择货道，不要求各轨道最终分配托盘数相同。若首条货道已满足需求，直接结束预占。</p>
+<h3>搬运与拣货衔接</h3>
+<p>预占完成后，按规划顺序搬运；需要清障时，执行现有清障规则：</p>
+<ul><li>单板区、混板区：从外向内移出阻挡托，移出后不回原货道。</li><li>多板区：外侧尾托移出后，待目标托盘出库，再放回原货道。</li></ul>
+<p>是否整托直出，继续按托盘是否全部出库、是否需要拆分 UPN 及合单拣货策略判断。</p>
       </section>
       <section id="examples">
-        <span class="eyebrow">SECTION 05</span><h2>案例</h2>
-        <p>共同前提：下架策略选择“整托优先”，临期大库龄优先未开启；本次可出库的 UPN 已按通用规则筛选，均属于当前同一分组，且无其他订单预占。除特别说明外，托盘可直接取出；非多板区同货道案例不存在连续出库优势。</p>
-        <div class="table-wrap"><table>
-          <thead><tr><th>案例</th><th>具体前提</th><th>需求量</th><th>选择结果</th></tr></thead>
-          <tbody>
-            <tr><td>按实际库存算整托</td><td>标准托装量 1000；托盘实际库存 900，全部符合本次预占条件。</td><td>900</td><td>整托预占 900。</td></tr>
-            <tr><td>整托先于部分托盘</td><td>A 托实际库存 1000，全部符合条件；B 托实际库存 1000，其中只有 400 符合条件，另有 600 不参与本组。</td><td>1000</td><td>选择 A 托整托；B 托符合条件的 400 仍属于部分托盘库存。</td></tr>
-            <tr><td>多个货道按时间选择</td><td>P1、P2 各有 1000，全部符合条件且位于不同货道外侧；P1 本次进入货道的时间较早。</td><td>1000</td><td>选择 P1 整托。</td></tr>
-            <tr><td>多板区同货道连续出库</td><td>多板区 A 货道从外向内连续两托可取；B、C 货道外侧各一托可取；每托 1000，均可整托预占。</td><td>2000</td><td>选择 A 货道连续两托。</td></tr>
-            <tr><td>整托后补剩余量</td><td>A 托 1000、B 托 600，均可整托预占且位于不同货道外侧；A 托本次进入货道的时间较早。</td><td>1100</td><td>先预占 A 托 1000，再从 B 托预占 100。</td></tr>
-            <tr><td>没有可选整托</td><td>A 托 1000、B 托 800，均全部符合条件且位于不同货道外侧；A 托本次进入货道的时间较早。</td><td>300</td><td>两托库存均超过需求，按货道间先进先出从 A 托预占 300。</td></tr>
-          </tbody>
-        </table></div>
+<span class="eyebrow">SECTION 06</span><h2>案例</h2>
+<p><strong>订单需求 1200；每托实际库存 100。</strong></p>
+<h3>案例前提</h3><ul><li>40-L5-1层指一层 40 区与 L5 区之间的轨道，选用货道 400101、400201、400301，容量均为 6 托。</li>
+<li>R2-30-1层指一层 R2 区与 30 区之间的轨道，选用货道 R200401、R200501，容量均为 3 托。</li>
+<li>托盘从外向内按 1、2、3……编号，各货道连续存放。</li>
+<li>所有托盘均为非混托，无其他订单预占；同货道的外部单号、供应商、SKU 一致。</li>
+<li>除 400301 位置 1 外，其余托盘均符合当前分组，每托可用库存为 100。</li>
+<li>400301 位置 1 的 UPN 日期不符合当前分组，可用库存为 0；位置 2、3 搬出前需先移走位置 1 的阻挡托。</li>
+</ul>
+<div class="table-wrap"><table class="allocation-case"><thead><tr><th>轨道</th><th>货道</th><th>托盘<br>位置</th><th>本次<br>可用库存</th><th>无需清障阶段<br>第一轮<br>轨道排序</th><th>无需清障阶段<br>第二轮<br>轨道排序</th><th>需清障阶段<br>第一轮<br>轨道排序</th><th>轨道内<br>货道排序</th><th>是否需<br>清障移库</th><th>执行<br>预占顺序</th></tr></thead><tbody>
+<tr class="lane-400101"><td class="track" rowspan="8">40-L5-1层</td><td class="lane" rowspan="1">400101</td><td>1</td><td>100</td><td>1</td><td>2</td><td>—</td><td>1</td><td>否</td><td>1</td></tr>
+<tr class="lane-400201"><td class="lane" rowspan="4">400201</td><td>1</td><td>100</td><td>1</td><td>2</td><td>—</td><td>2</td><td>否</td><td>7</td></tr>
+<tr class="lane-400201"><td>2</td><td>100</td><td>1</td><td>2</td><td>—</td><td>2</td><td>否</td><td>8</td></tr>
+<tr class="lane-400201"><td>3</td><td>100</td><td>1</td><td>2</td><td>—</td><td>2</td><td>否</td><td>9</td></tr>
+<tr class="lane-400201"><td>4</td><td>100</td><td>1</td><td>2</td><td>—</td><td>2</td><td>否</td><td>10</td></tr>
+<tr class="lane-400301"><td class="lane" rowspan="3">400301</td><td>1</td><td>0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr class="lane-400301"><td>2</td><td>100</td><td>—</td><td>—</td><td>1</td><td>1</td><td>是</td><td>11</td></tr>
+<tr class="lane-400301"><td>3</td><td>100</td><td>—</td><td>—</td><td>1</td><td>1</td><td>是</td><td>12</td></tr>
+<tr class="lane-R200401"><td class="track" rowspan="5">R2-30-1层</td><td class="lane" rowspan="2">R200401</td><td>1</td><td>100</td><td>2</td><td>1</td><td>—</td><td>1</td><td>否</td><td>2</td></tr>
+<tr class="lane-R200401"><td>2</td><td>100</td><td>2</td><td>1</td><td>—</td><td>1</td><td>否</td><td>3</td></tr>
+<tr class="lane-R200501"><td class="lane" rowspan="3">R200501</td><td>1</td><td>100</td><td>2</td><td>1</td><td>—</td><td>2</td><td>否</td><td>4</td></tr>
+<tr class="lane-R200501"><td>2</td><td>100</td><td>2</td><td>1</td><td>—</td><td>2</td><td>否</td><td>5</td></tr>
+<tr class="lane-R200501"><td>3</td><td>100</td><td>2</td><td>1</td><td>—</td><td>2</td><td>否</td><td>6</td></tr>
+</tbody></table></div>
+<h3>第一轮：无需清障库存</h3><p>两个轨道的最少货道分别有 1、2 托，先选 40-L5-1层。400101 预占 100，R200401 预占 200，累计 300，剩余需求 900。</p>
+<h3>第二轮：无需清障库存</h3><p>剩余货道分别有 3、4 托，改为先选 R2-30-1层。R200501 预占 300，400201 预占 400，累计 1000，剩余需求 200。</p>
+<h3>需清障库存预占</h3><p>无需清障库存已用完，从 400301 位置 2、3 各预占 100，累计 1200。搬运前将位置 1 的阻挡托移库，目标托盘搬出后再将阻挡托放回原货道。</p><p>表中“—”表示不参与对应阶段或不预占；轨道内货道排序为各阶段的初始排序。400301 位置 2、3 共用一次外侧阻挡托移库。</p>
       </section>
       <footer><a href="【OPPO】需求梳理-音锋仓-出库业务-20260822v1.html#strategy">返回音锋仓出库业务方案</a></footer>
     </main>
