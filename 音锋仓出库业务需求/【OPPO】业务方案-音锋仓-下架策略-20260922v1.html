@@ -13,12 +13,12 @@
     .layout{max-width:1210px;margin:auto;padding:28px 24px 60px;display:grid;grid-template-columns:190px minmax(0,1fr);gap:24px}nav{position:sticky;top:20px;align-self:start;background:white;border:1px solid var(--line);border-radius:14px;padding:12px}nav a{display:block;padding:9px 10px;text-decoration:none;border-radius:7px}nav a:hover{background:#edf5ff}main{min-width:0}
     section{scroll-margin-top:20px;background:white;border:1px solid var(--line);border-radius:16px;padding:26px;margin-bottom:22px;box-shadow:0 7px 22px #071f3d08}.eyebrow{color:var(--blue);font-size:12px;font-weight:750;letter-spacing:.08em}h2{margin:5px 0 14px;font-size:24px;line-height:1.4}h3{margin:22px 0 8px;font-size:18px}p{margin:10px 0}ul,ol{padding-left:24px;margin:10px 0}li{margin:8px 0}.note{padding:14px 18px;border-left:4px solid var(--blue);background:#eff6ff;border-radius:7px;margin:16px 0}.note.green{border-color:#087f6f;background:#eaf8f2}
     .sequence{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.step{background:#f2f7ff;border:1px solid #d5e5fb;padding:13px;border-radius:10px}.step b{display:block;color:#0a4b96;font-size:12px}.step span{font-weight:650}.table-wrap{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px}table{width:100%;min-width:610px;border-collapse:collapse;font-size:14px}th,td{padding:12px 14px;vertical-align:top;text-align:left;border-bottom:1px solid var(--line)}th{background:#095cb9;color:white}tr:nth-child(even) td{background:#f5f9ff}tr:last-child td{border-bottom:0}.small{font-size:13px;color:var(--muted)}footer{color:var(--muted);padding:0 5px}
-    .allocation-case{min-width:0;width:100%;table-layout:fixed;font-size:13px;line-height:1.5}.allocation-case th,.allocation-case td{padding:8px 6px;vertical-align:middle}.allocation-case th{overflow-wrap:anywhere}.allocation-case th:nth-child(1){width:13%}.allocation-case th:nth-child(2){width:10%}.allocation-case th:nth-child(3){width:6%}.allocation-case th:nth-child(4){width:9%}.allocation-case th:nth-child(n+5):nth-child(-n+7){width:12%}.allocation-case th:nth-child(8),.allocation-case th:nth-child(9){width:9%}.allocation-case th:nth-child(10){width:8%}.allocation-case td:nth-child(-n+2){overflow-wrap:anywhere}.allocation-case td:nth-child(n+3){text-align:center;font-variant-numeric:tabular-nums}
+    .allocation-case{min-width:0;width:100%;table-layout:fixed;font-size:13px;line-height:1.5}.allocation-case th,.allocation-case td{padding:8px 6px;vertical-align:middle}.allocation-case th{overflow-wrap:anywhere}.allocation-case th:nth-child(1){width:11%}.allocation-case th:nth-child(2){width:13%}.allocation-case th:nth-child(3){width:11%}.allocation-case th:nth-child(4){width:8%}.allocation-case th:nth-child(n+5){width:11.4%}
     .allocation-case tbody tr.lane-400101 td{background:#e4f0fc}.allocation-case tbody tr.lane-400201 td{background:#e6f4e9}.allocation-case tbody tr.lane-400301 td{background:#fbe4e7}.allocation-case tbody tr.lane-R200401 td{background:#fff0d8}.allocation-case tbody tr.lane-R200501 td{background:#eee7fa}.allocation-case tbody td.lane{border-top:2px solid #b6c5d6}
     .allocation-case tbody td{overflow-wrap:normal;text-align:center;font-variant-numeric:tabular-nums}.allocation-case tbody td.track,.allocation-case tbody td.lane{text-align:left;overflow-wrap:anywhere;font-weight:600}.allocation-case tbody td.track{background:#edf2f8;border-right:1px solid #b6c5d6}
     @media(max-width:800px){.layout{display:block;padding:18px 14px}nav{position:static;display:flex;flex-wrap:wrap;margin-bottom:18px}nav a{padding:6px 10px}section{padding:20px}.sequence{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media print{body{background:white;font-size:11pt}header{background:white;color:var(--ink);padding:0 0 15px}header a,header p{color:var(--ink)}.meta span{border-color:var(--line)}.layout{display:block;padding:0}nav{display:none}section{box-shadow:none;padding:18px;border-radius:0}h2,h3{break-after:avoid}tr,.step{break-inside:avoid}.table-wrap{overflow:visible}table{min-width:0}a{color:var(--ink)}}
-    .allocation-case tbody tr td.track-rank{background:#edf2f8;border-inline:1px solid #b6c5d6}
+    .allocation-case tbody tr td.track-rank{background:#edf2f8;border-inline:1px solid #b6c5d6}.allocation-case tbody tr td.clearance{background:#edf2f8;border-right:1px solid #b6c5d6;font-weight:600}
   </style>
 </head>
 <body>
@@ -114,24 +114,24 @@
 <li>除 400301 位置 1 外，其余托盘均符合当前分组，每托可用库存为 100。</li>
 <li>400301 位置 1 的 UPN 日期不符合当前分组，可用库存为 0；位置 2、3 搬出前需先移走位置 1 的阻挡托。</li>
 </ul>
-<div class="table-wrap"><table class="allocation-case"><thead><tr><th>轨道</th><th>货道</th><th>托盘<br>位置</th><th>本次<br>可用库存</th><th>无需清障阶段<br>第一轮<br>轨道排序</th><th>无需清障阶段<br>第二轮<br>轨道排序</th><th>需清障阶段<br>第一轮<br>轨道排序</th><th>轨道内<br>货道排序</th><th>是否需<br>清障移库</th><th>执行<br>预占顺序</th></tr></thead><tbody>
-<tr class="lane-400101"><td class="track" rowspan="8">40-L5-1层</td><td class="lane" rowspan="1">400101</td><td>1</td><td>100</td><td class="track-rank" rowspan="5">1</td><td>-</td><td rowspan="5">-</td><td>1</td><td>否</td><td>1</td></tr>
-<tr class="lane-400201"><td class="lane" rowspan="4">400201</td><td>1</td><td>100</td><td class="track-rank" rowspan="4">2</td><td rowspan="4">2</td><td>否</td><td>7</td></tr>
-<tr class="lane-400201"><td>2</td><td>100</td><td>否</td><td>8</td></tr>
-<tr class="lane-400201"><td>3</td><td>100</td><td>否</td><td>9</td></tr>
-<tr class="lane-400201"><td>4</td><td>100</td><td>否</td><td>10</td></tr>
-<tr class="lane-400301"><td class="lane" rowspan="3">400301</td><td>1</td><td>0</td><td rowspan="3">-</td><td rowspan="3">-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-<tr class="lane-400301"><td>2</td><td>100</td><td class="track-rank" rowspan="2">3</td><td rowspan="2">3</td><td>是</td><td>11</td></tr>
-<tr class="lane-400301"><td>3</td><td>100</td><td>是</td><td>12</td></tr>
-<tr class="lane-R200401"><td class="track" rowspan="5">R2-30-1层</td><td class="lane" rowspan="2">R200401</td><td>1</td><td>100</td><td class="track-rank" rowspan="5">2</td><td rowspan="2">-</td><td rowspan="5">-</td><td rowspan="2">1</td><td>否</td><td>2</td></tr>
-<tr class="lane-R200401"><td>2</td><td>100</td><td>否</td><td>3</td></tr>
-<tr class="lane-R200501"><td class="lane" rowspan="3">R200501</td><td>1</td><td>100</td><td class="track-rank" rowspan="3">1</td><td rowspan="3">2</td><td>否</td><td>4</td></tr>
-<tr class="lane-R200501"><td>2</td><td>100</td><td>否</td><td>5</td></tr>
-<tr class="lane-R200501"><td>3</td><td>100</td><td>否</td><td>6</td></tr>
+<div class="table-wrap"><table class="allocation-case"><thead><tr><th>是否需<br>清障移库</th><th>轨道</th><th>货道</th><th>托盘<br>位置</th><th>托盘<br>可用库存</th><th>第一轮<br>轨道排序</th><th>第二轮<br>轨道排序</th><th>轨道内<br>货道排序</th><th>执行<br>预占顺序</th></tr></thead><tbody>
+<tr class="lane-400101"><td class="clearance" rowspan="10">否</td><td class="track" rowspan="5">40-L5-1层</td><td class="lane">400101</td><td>1</td><td>100</td><td class="track-rank" rowspan="5">1-1</td><td class="track-rank">-</td><td>1</td><td>1</td></tr>
+<tr class="lane-400201"><td class="lane" rowspan="4">400201</td><td>1</td><td>100</td><td class="track-rank" rowspan="4">2-2</td><td rowspan="4">2</td><td>7</td></tr>
+<tr class="lane-400201"><td>2</td><td>100</td><td>8</td></tr>
+<tr class="lane-400201"><td>3</td><td>100</td><td>9</td></tr>
+<tr class="lane-400201"><td>4</td><td>100</td><td>10</td></tr>
+<tr class="lane-R200401"><td class="track" rowspan="5">R2-30-1层</td><td class="lane" rowspan="2">R200401</td><td>1</td><td>100</td><td class="track-rank" rowspan="5">1-2</td><td class="track-rank" rowspan="2">-</td><td rowspan="2">1</td><td>2</td></tr>
+<tr class="lane-R200401"><td>2</td><td>100</td><td>3</td></tr>
+<tr class="lane-R200501"><td class="lane" rowspan="3">R200501</td><td>1</td><td>100</td><td class="track-rank" rowspan="3">2-1</td><td rowspan="3">2</td><td>4</td></tr>
+<tr class="lane-R200501"><td>2</td><td>100</td><td>5</td></tr>
+<tr class="lane-R200501"><td>3</td><td>100</td><td>6</td></tr>
+<tr class="lane-400301"><td class="clearance" rowspan="3">是</td><td class="track" rowspan="3">40-L5-1层</td><td class="lane" rowspan="3">400301</td><td>1</td><td>0</td><td class="track-rank">-</td><td class="track-rank">-</td><td>-</td><td>-</td></tr>
+<tr class="lane-400301"><td>2</td><td>100</td><td class="track-rank" rowspan="2">3-1</td><td class="track-rank" rowspan="2">-</td><td rowspan="2">3</td><td>11</td></tr>
+<tr class="lane-400301"><td>3</td><td>100</td><td>12</td></tr>
 </tbody></table></div>
 <h3>第一轮：无需清障库存</h3><p>两个轨道的最少货道分别有 1、2 托，先选 40-L5-1层。400101 预占 100，R200401 预占 200，累计 300，剩余需求 900。</p>
 <h3>第二轮：无需清障库存</h3><p>剩余货道分别有 3、4 托，改为先选 R2-30-1层。R200501 预占 300，400201 预占 400，累计 1000，剩余需求 200。</p>
-<h3>需清障库存预占</h3><p>无需清障库存已用完，从 400301 位置 2、3 各预占 100，累计 1200。搬运前将位置 1 的阻挡托移库，目标托盘搬出后再将阻挡托放回原货道。</p><p>需清障阶段的轨道排序和轨道内货道排序分别接续前一阶段的编号。本例两项均为 3。排序值仅覆盖参与对应阶段和轮次的行，“-”表示不参与或不适用。400301 位置 2、3 共用一次外侧阻挡托移库。</p>
+<h3>需清障库存预占</h3><p>无需清障库存已用完，从 400301 位置 2、3 各预占 100，累计 1200。搬运前将位置 1 的阻挡托移库，目标托盘搬出后再将阻挡托放回原货道。</p><p>轨道排序按“轮次-名次”显示。第一轮、第二轮按各阶段分别统计。400301 在需清障阶段的第一轮参与排序，接续全程轮次，在第一轮列填写 3-1，轨道内货道排序为 3。“-”表示不参与或不适用。400301 位置 2、3 共用一次外侧阻挡托移库。</p>
       </section>
       <footer><a href="【OPPO】需求梳理-音锋仓-出库业务-20260822v1.html#strategy">返回音锋仓出库业务方案</a></footer>
     </main>
